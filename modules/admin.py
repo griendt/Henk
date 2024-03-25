@@ -1,3 +1,5 @@
+from henk import Henk
+from util import Message
 from .base import Module
 import longstrings
 
@@ -39,17 +41,8 @@ class Admin(Module):
         else:
             return "I'm afraid I can't let you do that"
 
-    def setsilent(self, bot, msg):
-        t = msg.command
-        if not t.isdigit():
-            return "1 of 0 aub"
-        else:
-            v = int(bool(int(t)))
-            bot.dataManager.set_silent_mode(msg.chat_id, v)
-            if v == 1 and not msg.chat_id in bot.silentchats:
-                bot.silentchats.append(msg.chat_id)
-            if v == 0 and msg.chat_id in bot.silentchats:
-                bot.silentchats.remove(msg.chat_id)
-            return "done"
+    def setsilent(self, bot: Henk, msg: Message) -> str:
+        return "Ik ben een lieve, stille bot."
+
 
 admin = Admin()

@@ -230,7 +230,7 @@ class ManageData(object):
 
     def get_silent_chats(self):
         with self.datalock:
-            t = self.chats.find(silent=1)
+            t = self.chats.find()
             return [i['chat_id'] for i in t]
         
 
