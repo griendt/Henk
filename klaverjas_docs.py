@@ -1,10 +1,10 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
- 
- 
+
+
 # use creds to create a client to interact with the Google Drive API
-scope = ['https://spreadsheets.google.com/feeds']
-creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
+scope = ["https://spreadsheets.google.com/feeds"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("client_secret.json", scope)
 client = gspread.authorize(creds)
 
 key = "1gHqbbzo6vWcjjmXaWVPMXPpM6g_ORTm8dvE9iNP2iq0"
@@ -13,10 +13,10 @@ key = "1gHqbbzo6vWcjjmXaWVPMXPpM6g_ORTm8dvE9iNP2iq0"
 spread = client.open_by_key(key)
 sheet = spread.sheet1
 sheet = spread.get_worksheet(5)
- 
+
 # Extract and print all of the values
-#list_of_hashes = sheet.get_all_records()
-#print(list_of_hashes)
+# list_of_hashes = sheet.get_all_records()
+# print(list_of_hashes)
 
 
 import pickle
@@ -28,20 +28,24 @@ KLAVERJASSEN_DISPATCH = 101
 KLAVERJASSEN_CHALLENGE = 102
 
 m = ManageData()
-class Bot():
+
+
+class Bot:
     pass
+
 
 b = Bot()
 b.dataManager = m
 
 games = []
 for d in m.games.find(game_type=KLAVERJASSEN_CHALLENGE):
-    g = pickle.loads(d['game_data'])
+    g = pickle.loads(d["game_data"])
     g.bot = b
-    if not hasattr(g, 'ngames') or g.ngames != 4: continue
-##    if not hasattr(g,"seed"): continue
-##    if len(g.real_players) != 1: continue
-##    if g.is_active == True: continue
+    if not hasattr(g, "ngames") or g.ngames != 4:
+        continue
+        ##    if not hasattr(g,"seed"): continue
+        ##    if len(g.real_players) != 1: continue
+        ##    if g.is_active == True: continue
     games.append(g)
 
 rows = []
@@ -56,28 +60,30 @@ for g in games:
     total = 0
     count = 0
     for pid, name in g.players.items():
-        if g.games_finished[pid] != 4: continue
+        if g.games_finished[pid] != 4:
+            continue
         count += 1
         players[pid] = name
         row.append(name)
-        score = g.scores[pid][0]-g.scores[pid][1]
+        score = g.scores[pid][0] - g.scores[pid][1]
         total += score
         row.append(score)
-    avg = total/count
+    avg = total / count
     row[1] = avg
     rows.append(row)
     for pid in g.players:
-        if g.games_finished[pid] != 4: continue
+        if g.games_finished[pid] != 4:
+            continue
         if pid not in playerscores:
-            playerscores[pid] = [g.scores[pid][0]-g.scores[pid][1] - avg]
+            playerscores[pid] = [g.scores[pid][0] - g.scores[pid][1] - avg]
         else:
-            playerscores[pid].append(g.scores[pid][0]-g.scores[pid][1] - avg)
+            playerscores[pid].append(g.scores[pid][0] - g.scores[pid][1] - avg)
 
 avgscores = {}
 for pid, l in playerscores.items():
-    avgscores[pid] = sum(l)/len(l)
+    avgscores[pid] = sum(l) / len(l)
 
-        
+
 ##    n = g.real_players[0].name
 ##    pid = g.real_players[0].user_id
 ##    row.append(n)
@@ -114,7 +120,7 @@ for pid, l in playerscores.items():
 ##            else:
 ##                matchups[(p1,p2)][2] += 1
 
-#for (p1, p2),(w,l,d) in matchups.items():
+# for (p1, p2),(w,l,d) in matchups.items():
 #    print("{}|{}: {!s}|{!s}|{!s}".format(players[p1],players[p2],w,l,d))
 
 ##rows = []
@@ -125,6 +131,7 @@ for pid, l in playerscores.items():
 ##        r.append(players[c])
 ##        r.append(scores[(seed,c)])
 ##    rows.append(r)
+
 
 def add_rows(rows):
     for r in rows:

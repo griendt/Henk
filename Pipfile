@@ -13,6 +13,7 @@ mypy = "*"
 simpleeval = "*"
 
 [dev-packages]
+ruff = "*"
 
 [requires]
 python_version = "3.6"

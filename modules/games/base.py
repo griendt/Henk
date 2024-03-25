@@ -4,11 +4,13 @@ import threading
 import telepot
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
 
+
 class BaseGame(object):
-    game_type = 0 #specifies which game it is. Should be unique for each class
+    game_type = 0  # specifies which game it is. Should be unique for each class
+
     def __init__(self, bot, game_id, players, date, cmd=""):
         self.bot = bot
-        self.game_id = game_id #unique identifier for this game instance
+        self.game_id = game_id  # unique identifier for this game instance
         self.is_active = True
         self.player_names = {}
         for user_id, user_name in players:
@@ -17,36 +19,42 @@ class BaseGame(object):
         self.cmd = cmd
         self.loaded = False
 
-        #self.current_users = [] # The list of user_ids for which the game is waiting for input.
+        # self.current_users = [] # The list of user_ids for which the game is waiting for input.
 
-        self.callbacks = [] #consists of tuples ((chat_id, message_id), callback) where callback is 
-                            # a function with 2 arguments: ident, button_id where
-                            # ident = (chat_id, message_id)
+        self.callbacks = []  # consists of tuples ((chat_id, message_id), callback) where callback is
+        # a function with 2 arguments: ident, button_id where
+        # ident = (chat_id, message_id)
 
         self.final_callback = None
 
         self._lock = bot.messagelock
-        #self.save_game_state()
+        # self.save_game_state()
 
     def load(self):
         self.loaded = True
 
     def game_ended(self):
         self.is_active = False
-        if self.final_callback: self.final_callback(self)
-
+        if self.final_callback:
+            self.final_callback(self)
 
     def send_user_message(self, msg, user_id=None, parse_mode=None):
-        '''Send msg to user_id. If user_id is None, it sends the message to all the players'''
+        """Send msg to user_id. If user_id is None, it sends the message to all the players"""
         with self._lock:
             if user_id:
-                if not parse_mode: sent = self.bot.telebot.sendMessage(user_id, msg)
-                else: sent = self.bot.telebot.sendMessage(user_id, msg, parse_mode=parse_mode)
+                if not parse_mode:
+                    sent = self.bot.telebot.sendMessage(user_id, msg)
+                else:
+                    sent = self.bot.telebot.sendMessage(
+                        user_id, msg, parse_mode=parse_mode
+                    )
                 return telepot.message_identifier(sent)
             idents = []
             for i in self.player_names:
-                if not parse_mode: sent = self.bot.telebot.sendMessage(i, msg)
-                else: sent = self.bot.telebot.sendMessage(i, msg, parse_mode=parse_mode)
+                if not parse_mode:
+                    sent = self.bot.telebot.sendMessage(i, msg)
+                else:
+                    sent = self.bot.telebot.sendMessage(i, msg, parse_mode=parse_mode)
                 idents.append(telepot.message_identifier(sent))
             return idents
 
@@ -54,15 +62,21 @@ class BaseGame(object):
         editor = telepot.helper.Editor(self.bot.telebot, ident)
         with self._lock:
             try:
-                if parse_mode: editor.editMessageText(msg, parse_mode=parse_mode)
-                else: editor.editMessageText(msg)
+                if parse_mode:
+                    editor.editMessageText(msg, parse_mode=parse_mode)
+                else:
+                    editor.editMessageText(msg)
             except telepot.exception.TelegramError:
                 pass
 
     def get_keyboard(self, buttons, index):
         options = []
-        for i,o in enumerate(buttons):
-            options.append(InlineKeyboardButton(text=o,callback_data="games%d:%d:%d" % (self.game_id,index,i)))
+        for i, o in enumerate(buttons):
+            options.append(
+                InlineKeyboardButton(
+                    text=o, callback_data="games%d:%d:%d" % (self.game_id, index, i)
+                )
+            )
         return InlineKeyboardMarkup(inline_keyboard=[options])
 
     def send_keyboard_message(self, chat_id, text, buttons, callback):
@@ -81,10 +95,14 @@ class BaseGame(object):
 
     def __getstate__(self):
         state = self.__dict__.copy()
-        try: del state['bot']
-        except KeyError: pass
-        try: del state['_lock']
-        except KeyError: pass
+        try:
+            del state["bot"]
+        except KeyError:
+            pass
+        try:
+            del state["_lock"]
+        except KeyError:
+            pass
         return state
 
     def setstate(self, bot):
@@ -93,7 +111,13 @@ class BaseGame(object):
 
     def save_game_state(self):
         with self._lock:
-            self.bot.dataManager.add_game(self.game_type,self.game_id,pickle.dumps(self),self.date, self.is_active)
+            self.bot.dataManager.add_game(
+                self.game_type,
+                self.game_id,
+                pickle.dumps(self),
+                self.date,
+                self.is_active,
+            )
 
 
 class BaseDispatcher(BaseGame):

@@ -3,24 +3,31 @@ import time
 import telepot
 
 import henk
-from managedata import ManageData
 
-ADMIN = 19620232 #John
-PPA = -218118195 #Henk's fun palace
+ADMIN = 19620232  # John
+PPA = -218118195  # Henk's fun palace
+
 
 class Bot(object):
     def sendMessage(self, chat_id, message):
         print(message)
 
     def getChatMember(self, chat_id, num):
-        return {'user': {'first_name': 'iemand'}}
+        return {"user": {"first_name": "iemand"}}
+
 
 def dummy_glance(msg):
-    return ('text', 'group', ADMIN)
+    return ("text", "group", ADMIN)
+
 
 def make_message(s):
-    return {'text': s, 'from': {'id': ADMIN, 'first_name': 'John'},
-            'date': int(time.time()),'chat':{'id':PPA}}
+    return {
+        "text": s,
+        "from": {"id": ADMIN, "first_name": "John"},
+        "date": int(time.time()),
+        "chat": {"id": PPA},
+    }
+
 
 def alias_list():
     h = henkBot
@@ -30,11 +37,11 @@ def alias_list():
     responses = []
     mix = []
     for i in set(h.aliasdict.values()):
-        categories.append([k for k,v in pairs if v==i])
-        responses.append(h.userresponses.get(i,[]))
+        categories.append([k for k, v in pairs if v == i])
+        responses.append(h.userresponses.get(i, []))
 
-        mix.append((categories[-1],responses[-1]))
-        
+        mix.append((categories[-1], responses[-1]))
+
     return mix, categories, responses
 
 
