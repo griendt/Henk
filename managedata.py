@@ -69,7 +69,7 @@ class ManageData(object):
         self.chats = self.db['Chats']
         self.polls = self.db['Polls']  # TODO: This feature is no longer needed, so we can remove it.
         self.games = self.db['Games']
-        self.maxgameid = next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))['max_id']
+        self.maxgameid = next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))['max_id'] or 0
         self.klaverjas_results = self.db['KlaverjasResults']
         self.dummy = False
         self.datalock = threading.Lock()
