@@ -227,3 +227,6 @@ modules/latex.pdf
 latex.tex
 latex.png
 latex.pdf
+/data.db.enc
+/data.db-shm
+/data.db-wal
