@@ -121,19 +121,24 @@ class ManageData(object):
             "Polls"
         ]  # TODO: This feature is no longer needed, so we can remove it.
         self.games = self.db["Games"]
-        self.maxgameid = (
-            next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))["max_id"]
-            or 0
-        )
+        try:
+            self.maxgameid = next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))["max_id"] or 0
+        except:
+            self.maxgameid = 0
+
         self.klaverjas_results = self.db["KlaverjasResults"]
         self.dummy = False
         self.datalock = threading.Lock()
 
         # self.alltext = "\n".join(i['text'] for i in self.messages.all())
-        recentish_messages = self.db.query(
-            "SELECT text FROM Messages WHERE (time >= %d) ORDER BY time"
-            % int(time.time() - 90 * 24 * 3600)
-        )
+        try:
+            recentish_messages = self.db.query(
+                "SELECT text FROM Messages WHERE (time >= %d) ORDER BY time"
+                % int(time.time() - 90 * 24 * 3600)
+            )
+        except:
+            recentish_messages = []
+
         self.alltext = "\n".join(i["text"] for i in recentish_messages)
 
     def close(self):
