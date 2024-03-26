@@ -1,5 +1,4 @@
 import pickle
-import threading
 
 import telepot
 from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton

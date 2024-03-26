@@ -1,13 +1,12 @@
-import time
 import math
 import os
 import pickle
 import threading
+import time
+from subprocess import call
 
 import dataset
 from textblob import TextBlob
-
-from subprocess import call
 
 try:
     f = open("password.txt", "r")
@@ -122,7 +121,12 @@ class ManageData(object):
         ]  # TODO: This feature is no longer needed, so we can remove it.
         self.games = self.db["Games"]
         try:
-            self.maxgameid = next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))["max_id"] or 0
+            self.maxgameid = (
+                    next(self.db.query("SELECT MAX(game_id) as max_id FROM Games;"))[
+                        "max_id"
+                    ]
+                    or 0
+            )
         except:
             self.maxgameid = 0
 
@@ -448,7 +452,6 @@ def prepare_pownies_text(m):
     c = [i for i in texts if any(i.find(d) != -1 for d in "0123456789")]
     print(len(c), "contain a number")
     return texts
-
 
 ##
 ##if __name__ == '__main__':

@@ -148,9 +148,9 @@ class Henk(object):
         if i not in self.querycounts:
             self.querycounts[i] = 0
         if (
-                q.find("henk") != -1
-                or (self.active and probaccept(2 ** -(max([self.querycounts[i] - 3, 0]))))
-                or probaccept(2 ** -(max([self.querycounts[i] - 1, 0])))
+            q.find("henk") != -1
+            or (self.active and probaccept(2 ** -(max([self.querycounts[i] - 3, 0]))))
+            or probaccept(2 ** -(max([self.querycounts[i] - 1, 0])))
         ):
             self.querycounts[i] += 1
             self.active = True
@@ -208,7 +208,7 @@ class Henk(object):
 
         # Morning message
         if (
-                msg.date - self.morning_message_timer > 3600 * 16
+            msg.date - self.morning_message_timer > 3600 * 16
         ):  # 16 hours since last message
             h = get_current_hour()
             if h > 6 and h < 12:  # it is morning
@@ -229,7 +229,7 @@ class Henk(object):
         if c in self.aliasdict:
             t = msg.date
             if (
-                    t - self.lastupdate > 1800
+                t - self.lastupdate > 1800
             ):  # every half hour update my willingness to say stuff
                 self.update_querycounts(int((t - self.lastupdate) / 1800))
                 self.lastupdate = t
@@ -247,7 +247,7 @@ class Henk(object):
         command = msg.normalised
         for i in self.commands["introductions"]:
             if command.startswith(i):
-                command = command[len(i) + 1:].strip()
+                command = command[len(i) + 1 :].strip()
                 break
         else:
             if not self.active:
@@ -310,41 +310,41 @@ class Henk(object):
         if len(command) > 6:
             chat_id = msg.chat_id
             if (
-                    command[-5:].find("?") != -1
-                    or command[-5:].find("/") != -1
-                    or command[-5:].find(">") != -1
+                command[-5:].find("?") != -1
+                or command[-5:].find("/") != -1
+                or command[-5:].find(">") != -1
             ):  # ? and common misspellings
                 if (
-                        command.find("wat vind") != -1
-                        or command.find("hoe denk") != -1
-                        or command.find("vind je") != -1
-                        or command.find("wat is je mening") != -1
-                        or command.find("wat denk") != -1
+                    command.find("wat vind") != -1
+                    or command.find("hoe denk") != -1
+                    or command.find("vind je") != -1
+                    or command.find("wat is je mening") != -1
+                    or command.find("wat denk") != -1
                 ):
                     self.sendMessage(
                         chat_id, self.pick(self.responses["question_opinion"])
                     )
                 elif startswith(
-                        command,
-                        [
-                            "heb",
-                            "ben ",
-                            "zijn ",
-                            "was ",
-                            "waren ",
-                            "is ",
-                            "ga",
-                            "zal ",
-                            "moet ",
-                        ],
+                    command,
+                    [
+                        "heb",
+                        "ben ",
+                        "zijn ",
+                        "was ",
+                        "waren ",
+                        "is ",
+                        "ga",
+                        "zal ",
+                        "moet ",
+                    ],
                 ):
                     self.sendMessage(
                         chat_id, self.pick(self.responses["question_degree"])
                     )
                 elif (
-                        command.find("hoeveel") != -1
-                        or command.find("hoe veel") != -1
-                        or command.find("hoe vaak") != -1
+                    command.find("hoeveel") != -1
+                    or command.find("hoe veel") != -1
+                    or command.find("hoe vaak") != -1
                 ):
                     self.sendMessage(
                         chat_id, self.pick(self.responses["question_amount"])
