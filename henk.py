@@ -14,6 +14,7 @@ import random
 import threading
 import time
 from collections import OrderedDict
+from typing import Any
 
 import telepot
 import urllib3
@@ -26,6 +27,9 @@ from util import get_current_hour, prepare_query, startswith, probaccept, Messag
 
 class Henk(object):
     MAX_MESSAGE_LENGTH = 4096  # as specified in https://limits.tginfo.me/en
+    commands: list
+    responses: list
+    sendername: Any
 
     def __init__(self, telebot, isdummy=False):
         self.telebot = telebot  # the bot interface for Telegram
@@ -51,9 +55,10 @@ class Henk(object):
             OrderedDict()
         )  # ident:callback for special reply actions from Telegram
 
-        self.load_files()  # must be called before module.register_commands
+        self.commands = []
 
         for module in modules.modules:
+            module.initialise(self)
             module.register_commands(self)
 
         # PPA = -6722364 #hardcoded label for party pownies
@@ -78,53 +83,6 @@ class Henk(object):
         if ident in self.callback_query_types:
             raise Exception("Callback ident %s already used" % ident)
         self.callback_query_types[ident] = callback
-
-    def build_response_dict(self):
-        aliases = self.dataManager.get_all_aliases()
-        self.aliasdict = {}  # mapping a query to an int
-        # usually we will call pick(self.userresponses[self.aliasdict[query]])
-        i = 0
-        for synonyms in aliases:  # go trough all lists of aliases
-            for query in self.aliasdict:  # for all registered aliases
-                if query in synonyms:  # check if it is in this list
-                    for s in synonyms:  # and then register them as the same
-                        self.aliasdict[s] = self.aliasdict[query]
-                    break
-            else:  # if not in the registered list
-                for s in synonyms:  # register them as a new subset
-                    self.aliasdict[s] = i
-                i += 1
-
-        d = self.dataManager.get_all_responses()
-        for k, v in list(d.items()):
-            if k.startswith("$"):  # special queries such as $question_what
-                self.responses[k[1:]].extend(v)
-                del d[k]
-
-        self.userresponses = {}  # mapping an int (from aliases) to a list of responses
-        for query in d:
-            if query in self.aliasdict:
-                if self.aliasdict[query] in self.userresponses:
-                    self.userresponses[self.aliasdict[query]].extend(d[query])
-                else:
-                    self.userresponses[self.aliasdict[query]] = d[query]
-            else:
-                self.aliasdict[query] = i
-                self.userresponses[i] = d[query]
-                i += 1
-
-    def load_files(self):
-        f = open("commands.json", "r")
-        d = json.load(f)  # dictionary of lists of variations of commands and responses
-        f.close()
-        self.commands = d["commands"]
-        self.responses = d["responses"]
-
-        self.build_response_dict()
-
-        self.silentchats = self.dataManager.get_silent_chats()
-        for module in modules.modules:
-            module.initialise(self)
 
     def sendMessage(self, chat_id, s):
         with self.messagelock:
@@ -157,24 +115,6 @@ class Henk(object):
             return True
         return False
 
-    def morning_message(self, chat_id, msg):
-        if probaccept(0.3):
-            if msg.startswith("/") and msg.find("morgen") != -1:
-                self.sendMessage(chat_id, msg)
-            elif msg.find("morgen") != -1:
-                self.sendMessage(chat_id, msg)
-            else:
-                self.sendMessage(chat_id, "Goedemorgen")
-            time.sleep(1.0)
-            if probaccept(0.5):
-                return modules.weather.weather_report()
-            elif probaccept(0.5):
-                return modules.entertainment.get_joke()
-            else:
-                return modules.entertainment.get_openingline()
-        else:
-            return None
-
     def on_chat_message(self, message):
         msg = Message(message)
         if not msg.istext:
@@ -183,8 +123,6 @@ class Henk(object):
             return
 
         self.dataManager.write_message(msg.object)
-        rawcommand = msg.raw
-        command = msg.normalised
         self.sendername = msg.sendername
         try:
             print("Chat:", msg.chat_type, msg.chat_id, msg.normalised)
@@ -201,198 +139,6 @@ class Henk(object):
                     if v:
                         self.sendMessage(msg.chat_id, v)
                     return
-
-        # if modules.games.is_games_message(msg):
-        #    modules.games.parse_message(self, msg)
-        #    return
-
-        # Morning message
-        if (
-            msg.date - self.morning_message_timer > 3600 * 16
-        ):  # 16 hours since last message
-            h = get_current_hour()
-            if h > 6 and h < 12:  # it is morning
-                v = self.morning_message(self.homegroup, command)
-                if v:
-                    self.morning_message_timer = msg.date
-                    self.sendMessage(self.homegroup, v)
-                    return
-
-        if msg.chat_id in self.silentchats:
-            self.active = False
-            return
-
-        # now for the fun stuff :)
-
-        # custom user responses
-        c = prepare_query(msg.raw)
-        if c in self.aliasdict:
-            t = msg.date
-            if (
-                t - self.lastupdate > 1800
-            ):  # every half hour update my willingness to say stuff
-                self.update_querycounts(int((t - self.lastupdate) / 1800))
-                self.lastupdate = t
-            if self.react_to_query(c):
-                p = self.pick(self.userresponses[self.aliasdict[c]])
-                # p = p.replace("!name", msg.sendername)
-                if p:
-                    self.sendMessage(msg.chat_id, p)
-                return
-
-        # respond to cussing
-        if startswith(msg.normalised.replace(", ", " "), self.commands["cuss_out"]):
-            self.sendMessage(msg.chat_id, self.pick(self.responses["cuss_out"]))
-            return
-        command = msg.normalised
-        for i in self.commands["introductions"]:
-            if command.startswith(i):
-                command = command[len(i) + 1 :].strip()
-                break
-        else:
-            if not self.active:
-                return  # no introduction given and not active
-        if command.startswith(","):
-            command = command[1:].strip()
-        if command.startswith("."):
-            command = command[1:].strip()
-
-        # No further command is given so we just say hi
-        if not command:
-            try:
-                name = msg.sendername
-                if name == "Olaf":
-                    name = "Slomp"
-                val = self.pick(self.responses["hi"]).replace("!name", name)
-                self.sendMessage(msg.chat_id, val)
-                if probaccept(0.07):
-                    time.sleep(1.0)
-                    self.sendMessage(msg.chat_id, modules.entertainment.get_joke())
-                return
-            except KeyError:
-                self.active = False
-                return
-
-        # check if the command corresponds to a module
-        for cmd in self.commandcategories.keys():
-            s = startswith(command, self.commands[cmd])
-            if s:
-                msg.command = command[len(s) + 1:].strip()
-                r = self.commandcategories[cmd](self, msg)
-                if r and type(r) == str:
-                    self.sendMessage(msg.chat_id, r)
-                return
-
-        # try approximate custom matches
-        options = difflib.get_close_matches(
-            command, self.aliasdict.keys(), n=1, cutoff=0.9
-        )
-        if not options:
-            options = difflib.get_close_matches(
-                prepare_query(msg.raw), self.aliasdict.keys(), n=1, cutoff=0.9
-            )
-        if options:
-            if self.react_to_query(options[0]):
-                p = self.pick(self.userresponses[self.aliasdict[options[0]]])
-                if p:
-                    self.sendMessage(msg.chat_id, p)
-                return
-
-        # haha... kont
-        if command.find("kont") != -1:
-            self.sendMessage(msg.chat_id, "Hahaha, je zei kont")
-            return
-        if command.find("cont") != -1:
-            self.sendMessage(msg.chat_id, "Hahaha, je zei cont")
-            return
-
-        # questions and other random reactions
-        if len(command) > 6:
-            chat_id = msg.chat_id
-            if (
-                command[-5:].find("?") != -1
-                or command[-5:].find("/") != -1
-                or command[-5:].find(">") != -1
-            ):  # ? and common misspellings
-                if (
-                    command.find("wat vind") != -1
-                    or command.find("hoe denk") != -1
-                    or command.find("vind je") != -1
-                    or command.find("wat is je mening") != -1
-                    or command.find("wat denk") != -1
-                ):
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_opinion"])
-                    )
-                elif startswith(
-                    command,
-                    [
-                        "heb",
-                        "ben ",
-                        "zijn ",
-                        "was ",
-                        "waren ",
-                        "is ",
-                        "ga",
-                        "zal ",
-                        "moet ",
-                    ],
-                ):
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_degree"])
-                    )
-                elif (
-                    command.find("hoeveel") != -1
-                    or command.find("hoe veel") != -1
-                    or command.find("hoe vaak") != -1
-                ):
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_amount"])
-                    )
-                elif command.find("waarom") != -1:
-                    self.sendMessage(chat_id, self.pick(self.responses["question_why"]))
-                elif command.find("wat ") != -1:
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_what"])
-                    )
-                elif command.find("waarvoor ") != -1:
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_waarvoor"])
-                    )
-                elif command.find("waar ") != -1:
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_where"])
-                    )
-                elif command.find("wanneer") != -1 or command.find("hoe laat") != -1:
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_when"])
-                    )
-                elif command.find("hoe ") != -1:
-                    self.sendMessage(chat_id, self.pick(self.responses["question_how"]))
-                elif command.find("welk") != -1:
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_which"])
-                    )
-                elif command.find("wie") != -1:
-                    self.sendMessage(chat_id, self.pick(self.responses["question_who"]))
-                else:  # yes/no question
-                    self.sendMessage(
-                        chat_id, self.pick(self.responses["question_degree"])
-                    )
-                return
-            self.active = False
-            if probaccept(0.05):
-                self.sendMessage(chat_id, modules.entertainment.get_openingline())
-            elif probaccept(0.15):
-                self.sendMessage(
-                    chat_id, self.pick(self.responses["negative_response"])
-                )
-            elif probaccept(0.08):
-                r = random.randint(
-                    0, len(self.userresponses) - 1
-                )  # this works because the keys of userresponses are consecutive integers
-                self.sendMessage(chat_id, self.pick(self.userresponses[r]))
-            return
 
         self.active = False
         return

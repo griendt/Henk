@@ -1,36 +1,10 @@
 import math
-import os
 import pickle
 import threading
 import time
-from subprocess import call
 
 import dataset
 from textblob import TextBlob
-
-try:
-    f = open("password.txt", "r")
-except:
-    raise Exception("Password file not found")
-password = f.read().strip()
-f.close()
-
-
-def encrypt():
-    call(
-        r"openssl enc -aes-256-cbc -salt -in data.db -out data.db.enc -pass pass:"
-        + password,
-        shell=True,
-    )
-
-
-def decrypt():
-    call(
-        r"openssl enc -d -aes-256-cbc -salt -in data.db.enc -out data.db -pass pass:"
-        + password,
-        shell=True,
-    )
-
 
 PPA = -6722364  # hardcoded label for party pownies
 PPA = -218118195  # Henk's fun palace
@@ -223,11 +197,6 @@ class ManageData(object):
                 {"user_id": user_id, "aliases": " | ".join(aliases), "time": time}
             )
 
-    def get_all_aliases(self):
-        with self.datalock:
-            com = self.aliases.all()
-            return [c["aliases"].split(" | ") for c in com]
-
     def get_user_aliases(self, user):
         with self.datalock:
             com = self.aliases.find(user_id=user, order_by="time")
@@ -318,11 +287,6 @@ class ManageData(object):
                 )
             else:
                 self.chats.insert({"chat_id": chat_id, "silent": setsilent})
-
-    def get_silent_chats(self):
-        with self.datalock:
-            t = self.chats.find()
-            return [i["chat_id"] for i in t]
 
 
 def tf(word, blob):
