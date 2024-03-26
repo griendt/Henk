@@ -9,6 +9,4 @@ from .calc import calc
 from .markup import markup
 from .games import games
 
-modules = [admin, weather, wiki, calc, learning, entertainment, markup, games]
-# I've removed menu from modules list, as this probably is no longer up to date.
-# I've removed poll from the list as this feature is superceded by the Telegram feature.
+modules = [admin, games]
