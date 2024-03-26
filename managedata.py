@@ -93,23 +93,6 @@ def is_word_relevant(word):
 
 class ManageData(object):
     def __init__(self):
-        f = open("isencrypted.txt", "r")
-        val = int(f.read())
-        f.close()
-        if val:
-            decrypt()
-            time.sleep(0.5)
-            f = open("isencrypted.txt", "w")
-            f.write("0")
-            f.close()
-        else:
-            print("Database wasn't encrypted on last closure, encrypting now...")
-            encrypt()
-            time.sleep(0.5)
-            print("decrypting...")
-            decrypt()
-            time.sleep(0.5)
-
         self.db = dataset.connect("sqlite:///data.db?check_same_thread=False")
         self.messages = self.db["Messages"]
         self.users = self.db["Users"]
@@ -144,13 +127,6 @@ class ManageData(object):
             recentish_messages = []
 
         self.alltext = "\n".join(i["text"] for i in recentish_messages)
-
-    def close(self):
-        print(os.getcwd())
-        encrypt()
-        f = open("isencrypted.txt", "w")
-        f.write("1")
-        f.close()
 
     def write_message(self, msg):
         if self.dummy:
