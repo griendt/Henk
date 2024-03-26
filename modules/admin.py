@@ -9,11 +9,15 @@ class Admin(Module):
         bot.add_slash_command("ping", self.ping)
 
     @staticmethod
-    def help(bot: Henk, msg: Message):
-        return "Ik ben Ingrid, en ik ben een beetje verlegen. Daarom sta ik standaard in stille modus. Je kan alleen met mij klaverjassen."
+    def help(bot: Henk, message: Message) -> str:
+        return (
+            "Ik ben Ingrid, en ik ben een beetje verlegen. Daarom sta ik standaard in stille modus. Je kan alleen met mij klaverjassen. "
+            "Mijn commands zijn: \n/"
+            + "\n/".join(bot.slashcommands.keys())
+        )
 
     @staticmethod
-    def ping(bot: Henk, msg: Message):
+    def ping(bot: Henk, message: Message) -> str:
         return "pong"
 
 

@@ -8,8 +8,6 @@ Install these with "pip install libname" and for textblob additionally call pyth
 
 """
 
-import difflib
-import json
 import random
 import threading
 import time
@@ -22,7 +20,7 @@ from telepot.loop import MessageLoop
 
 import modules
 from managedata import ManageData
-from util import get_current_hour, prepare_query, startswith, probaccept, Message
+from util import get_current_hour, probaccept, Message
 
 
 class Henk(object):
