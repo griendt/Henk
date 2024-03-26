@@ -1,12 +1,8 @@
 import datetime
 import random
 import re
-import os
 
 import telepot
-
-datadir = os.path.abspath("datafiles")
-print(datadir)
 
 
 def get_current_hour():
