@@ -415,11 +415,6 @@ class Henk(object):
             query_id, from_id, query_string = telepot.glance(msg, flavor="inline_query")
             result = []
             s = query_string.lower().strip()
-            for k, v in longstrings.photos.items():
-                if k.find(s) != -1:
-                    result.append(
-                        InlineQueryResultPhoto(id=k, photo_url=v, thumb_url=v)
-                    )
 
             return result
 

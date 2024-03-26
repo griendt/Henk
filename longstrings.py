@@ -1,27 +1,3 @@
-photos = {
-    "rood": "http://alexvdg.nl/cards/rood.jpg",
-    "geel": "http://alexvdg.nl/cards/geel.jpg",
-    "aubergine": "http://alexvdg.nl/cards/aubergine.jpg",
-    "groen": "http://alexvdg.nl/cards/groen.jpg",
-    "oui": "http://alexvdg.nl/cards/oui.jpg",
-    "superrood": "http://alexvdg.nl/cards/superrood.jpg",
-    "ussr": "http://alexvdg.nl/cards/ussr.jpg",
-    "baer": "http://alexvdg.nl/cards/baer.jpg",
-    "exodia": "http://alexvdg.nl/cards/exodia.jpg",
-    "margot": "http://alexvdg.nl/cards/margot.jpg",
-    "meshuggah": "http://alexvdg.nl/cards/messhugah.png",
-    "negerpiemel": "http://alexvdg.nl/cards/negerpiemel.jpg",
-    "ruiten10": "http://alexvdg.nl/cards/ruiten%20tien.png",
-    "slomp": "http://alexvdg.nl/cards/slomp.jpg",
-    "slowpoke": "http://alexvdg.nl/cards/slowpoke.jpg",
-    "starcraft": "http://alexvdg.nl/cards/starcraft.jpg",
-    "traphole": "http://alexvdg.nl/cards/traphole.jpg",
-    "trump": "http://alexvdg.nl/cards/trump.jpg",
-    "wat": "http://alexvdg.nl/cards/wat.jpg",
-    "gloen": "http://alexvdg.nl/cards/gloen.jpg",
-    "rutte": "http://alexvdg.nl/cards/rutte.jpg",
-}
-
 introtext = """Hoi mijn naam is Henk, ik ben een bot die allerlei dingen kan doen.
 Voor een overzicht van wat ik allemaal kan, vraag aan me "Henk wat kun je allemaal?" (of /help). Als je mijn maker niet kent, gebruik me dan alsjeblieft ook niet, daar ben ik niet voor gemaakt :)"""
 
