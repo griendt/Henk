@@ -1,4 +1,3 @@
-import longstrings
 from henk import Henk
 from util import Message
 from .base import Module
