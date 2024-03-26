@@ -11,7 +11,7 @@ class BaseGame(object):
         self.bot = bot
         self.game_id = game_id  # unique identifier for this game instance
         self.is_active = True
-        self.player_names = players
+        self.player_names = {user_id: user_name for user_id, user_name in players}
         self.date = date
         self.cmd = cmd
         self.loaded = False
