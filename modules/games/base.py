@@ -11,23 +11,13 @@ class BaseGame(object):
         self.bot = bot
         self.game_id = game_id  # unique identifier for this game instance
         self.is_active = True
-        self.player_names = {}
-        for user_id, user_name in players:
-            self.player_names[user_id] = user_name
+        self.player_names = players
         self.date = date
         self.cmd = cmd
         self.loaded = False
-
-        # self.current_users = [] # The list of user_ids for which the game is waiting for input.
-
-        self.callbacks = []  # consists of tuples ((chat_id, message_id), callback) where callback is
-        # a function with 2 arguments: ident, button_id where
-        # ident = (chat_id, message_id)
-
+        self.callbacks = []
         self.final_callback = None
-
         self._lock = bot.messagelock
-        # self.save_game_state()
 
     def load(self):
         self.loaded = True
