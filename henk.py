@@ -106,7 +106,7 @@ class Henk(object):
         if i not in self.querycounts:
             self.querycounts[i] = 0
         if (
-            q.find("henk") != -1
+            q.find("ingrid") != -1
             or (self.active and probaccept(2 ** -(max([self.querycounts[i] - 3, 0]))))
             or probaccept(2 ** -(max([self.querycounts[i] - 1, 0])))
         ):

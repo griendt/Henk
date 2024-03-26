@@ -544,7 +544,7 @@ class KlaverjasChallenge(BaseDispatcher):
 
     def __init__(self, bot, game_id, msg, ngames=1):
         super().__init__(bot, game_id, msg)
-        self.players = OrderedDict({1: "Henk", self.sender_id: self.sender_name})
+        self.players = OrderedDict({1: "Ingrid", self.sender_id: self.sender_name})
         self.seeds = [
             "".join(random.choice(string.ascii_lowercase) for _ in range(10))
             for i in range(ngames)
@@ -637,7 +637,7 @@ class KlaverjasChallenge(BaseDispatcher):
                 return "Maak eerst je potje af"
             msg = self.generate_unveil_message()
             self.send_user_message(msg, sender)
-            return "Zie Henk"
+            return "Zie Ingrid"
         elif button_id == 2:
             if self.unveiled:
                 return "Al unveiled"
@@ -725,7 +725,7 @@ class KlaverjasChallenge(BaseDispatcher):
                     self.send_user_message(msg, pid)
 
     def message_init(self):
-        txt = "{}\n*Henk: Bezig met spelen\n*{}: Bezig met spelen".format(
+        txt = "{}\n*Ingrid: Bezig met spelen\n*{}: Bezig met spelen".format(
             self.welcome, self.sender_name
         )
         self.ident = self.send_keyboard_message(

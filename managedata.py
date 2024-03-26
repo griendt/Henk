@@ -32,7 +32,7 @@ wordfilterlist = [
     "alias",
     "myresponses",
     "voor",
-    "henk",
+    "ingrid",
     "welke",
     "waarom",
     "vind",
