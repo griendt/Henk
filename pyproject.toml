@@ -1,0 +1,48 @@
+[tool.ruff]
+exclude = [
+    ".git",
+    ".idea",
+    ".mypy_cache",
+    ".ruff_cache",
+]
+
+line-length = 160
+indent-width = 4
+
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN101",
+    "D101",
+    "D103",
+    "D105",
+    "D107",
+    "D203",
+    "D211",
+    "D212",
+    "COM812",
+    "ISC001",
+    "Q000",
+    "Q003"
+]
+
+fixable = ["ALL"]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+disallow_untyped_defs = true
