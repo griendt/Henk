@@ -1,13 +1,13 @@
 import pickle
 
 import telepot
-from telepot.namedtuple import InlineKeyboardMarkup, InlineKeyboardButton
+from telepot.namedtuple import InlineKeyboardButton, InlineKeyboardMarkup
 
 
-class BaseGame(object):
+class BaseGame:
     game_type = 0  # specifies which game it is. Should be unique for each class
 
-    def __init__(self, bot, game_id, players, date, cmd=""):
+    def __init__(self, bot, game_id, players, date, cmd=''):
         self.bot = bot
         self.game_id = game_id  # unique identifier for this game instance
         self.is_active = True
@@ -34,9 +34,7 @@ class BaseGame(object):
                 if not parse_mode:
                     sent = self.bot.telebot.sendMessage(user_id, msg)
                 else:
-                    sent = self.bot.telebot.sendMessage(
-                        user_id, msg, parse_mode=parse_mode
-                    )
+                    sent = self.bot.telebot.sendMessage(user_id, msg, parse_mode=parse_mode)
                 return telepot.message_identifier(sent)
             idents = []
             for i in self.player_names:
@@ -61,11 +59,7 @@ class BaseGame(object):
     def get_keyboard(self, buttons, index):
         options = []
         for i, o in enumerate(buttons):
-            options.append(
-                InlineKeyboardButton(
-                    text=o, callback_data="games%d:%d:%d" % (self.game_id, index, i)
-                )
-            )
+            options.append(InlineKeyboardButton(text=o, callback_data='games%d:%d:%d' % (self.game_id, index, i)))
         return InlineKeyboardMarkup(inline_keyboard=[options])
 
     def send_keyboard_message(self, chat_id, text, buttons, callback):
@@ -85,11 +79,11 @@ class BaseGame(object):
     def __getstate__(self):
         state = self.__dict__.copy()
         try:
-            del state["bot"]
+            del state['bot']
         except KeyError:
             pass
         try:
-            del state["_lock"]
+            del state['_lock']
         except KeyError:
             pass
         return state
@@ -118,4 +112,4 @@ class BaseDispatcher(BaseGame):
         self.message_init()
 
     def message_init(self):
-        raise NotImplementedError("message_init not implemented")
+        raise NotImplementedError('message_init not implemented')

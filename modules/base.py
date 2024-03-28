@@ -1,4 +1,4 @@
-class Module(object):
+class Module:
     def initialise(self, bot):
         pass
 
@@ -9,7 +9,6 @@ class Module(object):
         bot.add_command_category("commandtype", self.callback)
         bot.add_callback_query("ident", self.callback)
         """
-        pass
 
     def callback(self, bot, msg):
         """
@@ -17,4 +16,3 @@ class Module(object):
         If it returns a string, this string is sent back to the sender
         msg is a util.Message object
         """
-        pass

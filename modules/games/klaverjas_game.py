@@ -7,40 +7,40 @@ from collections import OrderedDict
 
 import telepot
 
-from .base import BaseGame, BaseDispatcher
-from .cards import create_deck, Cards, suit_to_unicode, highest_card, glory_calculation, card_points, valuenames, colornames, short_valuenames
-from .klaverjas_ai import BasePlayer, AI
+from .base import BaseDispatcher, BaseGame
+from .cards import Cards, card_points, colornames, create_deck, glory_calculation, highest_card, short_valuenames, suit_to_unicode, valuenames
+from .klaverjas_ai import AI, BasePlayer
 
 KLAVERJASSEN = 100
 KLAVERJASSEN_DISPATCH = 101
 KLAVERJASSEN_CHALLENGE = 102
 
 klaverjas_names = [
-    "Ingrid",
-    "Klaas",
-    "Bert",
-    "Fatima",
-    "Piet",
-    "Joop",
-    "Els",
-    "Sjaan",
-    "Achmed",
-    "Bob",
-    "Bep",
-    "Kim",
-    "Rico",
-    "Benny",
-    "Serena",
-    "Amalia",
+    'Ingrid',
+    'Klaas',
+    'Bert',
+    'Fatima',
+    'Piet',
+    'Joop',
+    'Els',
+    'Sjaan',
+    'Achmed',
+    'Bob',
+    'Bep',
+    'Kim',
+    'Rico',
+    'Benny',
+    'Serena',
+    'Amalia',
     "D'Shawn",
-    "Jezus",
-    "Sterre",
+    'Jezus',
+    'Sterre',
     "D'Nise",
-    "Aagje",
-    "Edith",
-    "Renate",
-    "Ling",
-    "Yusuf",
+    'Aagje',
+    'Edith',
+    'Renate',
+    'Ling',
+    'Yusuf',
 ]
 
 # seed for potje met roem op eerste slag: ulonrloyfp
@@ -53,9 +53,7 @@ def dummy_printer(s):
 class Klaverjas(BaseGame):
     game_type = KLAVERJASSEN
 
-    def __init__(
-        self, bot, game_id, players, date, cmd, startingplayer=0, should_initialize=True
-    ):
+    def __init__(self, bot, game_id, players, date, cmd, startingplayer=0, should_initialize=True):
         super().__init__(bot, game_id, players, date, cmd)
         self.real_players = []
         for user_id, user_name in players:
@@ -77,7 +75,7 @@ class Klaverjas(BaseGame):
     def __getstate(self):
         state = super().__getstate()
         try:
-            del state["final_callback"]
+            del state['final_callback']
         except KeyError:
             pass
         return state
@@ -87,9 +85,7 @@ class Klaverjas(BaseGame):
         if self.cmd:
             self.seed = self.cmd
         else:
-            self.seed = "".join(
-                random.choice(string.ascii_lowercase) for _ in range(10)
-            )
+            self.seed = ''.join(random.choice(string.ascii_lowercase) for _ in range(10))
         r = random.Random()
         r.seed(self.seed)
         r.shuffle(self.deck)
@@ -106,7 +102,7 @@ class Klaverjas(BaseGame):
         self.glory_previous_round = -1
         self.currentplayer = self.startingplayer
         self.status_messages = []
-        self.endroundtext = ""
+        self.endroundtext = ''
         self.p1, self.p2, self.p3, self.p4 = self.players
         self.p1.set_partner(self.p3.index)
         self.p3.set_partner(self.p1.index)
@@ -125,11 +121,11 @@ class Klaverjas(BaseGame):
 
         self.give_cards()
         if self.startingplayer in (0, 2):
-            msg = "Team 1: {}, {}\n".format(self.p1.name, self.p3.name)
-            msg += "Team 2: {}, {}\n".format(self.p2.name, self.p4.name)
+            msg = f'Team 1: {self.p1.name}, {self.p3.name}\n'
+            msg += f'Team 2: {self.p2.name}, {self.p4.name}\n'
         else:
-            msg = "Team 1: {}, {}\n".format(self.p2.name, self.p4.name)
-            msg += "Team 2: {}, {}\n".format(self.p1.name, self.p3.name)
+            msg = f'Team 1: {self.p2.name}, {self.p4.name}\n'
+            msg += f'Team 2: {self.p1.name}, {self.p3.name}\n'
         for p in self.real_players:
             p.send_message(msg + p.hand_string())
 
@@ -143,27 +139,27 @@ class Klaverjas(BaseGame):
 
     def _trump_set(self, ident, button_id, user):
         if ident in self.callbacks_disposed:
-            return
+            return None
         self.callbacks_disposed.append(ident)
         self.trump = button_id
         [self.players[i].set_trump(self.trump) for i in range(4)]
         self.disable_keyboard(ident)
         self.progress_game()
-        return "Troef gekozen"
+        return 'Troef gekozen'
 
     def message_pick_trump(self, player):
-        msg = player.hand_string() + "\nKies troef"
+        msg = player.hand_string() + '\nKies troef'
         self.send_keyboard_message(
             player.user_id,
             msg,
-            ["  {}  ".format(suit_to_unicode[i]) for i in range(4)],
+            [f'  {suit_to_unicode[i]}  ' for i in range(4)],
             self._trump_set,
         )
         self.save_game_state()
 
     def _card_picked(self, ident, button_id, user):
         if ident in self.callbacks_disposed:
-            return
+            return None
         self.callbacks_disposed.append(ident)
         self.cards_this_round.append(self.playable_cards[button_id])
         p = self.players[self.currentplayer]
@@ -176,7 +172,7 @@ class Klaverjas(BaseGame):
             self.process_round(progress_game=True)
         else:
             self.progress_game()
-        return "Kaart gekozen"
+        return 'Kaart gekozen'
 
     def message_play_card(self, player):
         legal = Cards(player.legal_cards(self.cards_this_round))
@@ -186,73 +182,69 @@ class Klaverjas(BaseGame):
         for col in suits:
             self.playable_cards.extend(legal.filter_color(col).sorted(reverse=True))
         buttons = [card.pretty() for card in self.playable_cards]
-        self.send_keyboard_message(
-            player.user_id, "Kies een kaart", buttons, self._card_picked
-        )
+        self.send_keyboard_message(player.user_id, 'Kies een kaart', buttons, self._card_picked)
         self.save_game_state()
 
     def update_status_message(self):
         if self.cards_previous_round:
-            msg = "Vorige ronde: \n"
-            msg += "{} is begonnen\n".format(
-                self.players[self.cards_previous_round[0].owner].name
-            )
+            msg = 'Vorige ronde: \n'
+            msg += f'{self.players[self.cards_previous_round[0].owner].name} is begonnen\n'
             index_to_card = {}
             for c in self.cards_previous_round:
                 index_to_card[c.owner] = c.pretty()
-            msg += "```\n{}\n".format(self.p3.name.rjust(12))
-            msg += index_to_card[self.p3.index].rjust(10) + "\n"
-            msg += self.p2.name.ljust(12) + self.p4.name.rjust(8) + "    \n"
+            msg += f'```\n{self.p3.name.rjust(12)}\n'
+            msg += index_to_card[self.p3.index].rjust(10) + '\n'
+            msg += self.p2.name.ljust(12) + self.p4.name.rjust(8) + '    \n'
             msg += index_to_card[self.p2.index].center(4).ljust(12)
             msg += index_to_card[self.p4.index].center(len(self.p4.name) - 1).rjust(4)
-            msg += "\n" + self.p1.name.rjust(12) + "\n"
-            msg += index_to_card[self.p1.index].rjust(10) + "\n"
-            msg += "\n```"
+            msg += '\n' + self.p1.name.rjust(12) + '\n'
+            msg += index_to_card[self.p1.index].rjust(10) + '\n'
+            msg += '\n```'
             winner = highest_card(self.cards_previous_round, self.trump).owner
             # glory = glory_calculation(self.cards_previous_round, self.trump)
             if self.glory_previous_round > 0:
-                msg += "Roem! {!s} punten\n".format(self.glory_previous_round)
-            msg += "{} heeft gewonnen\n \n".format(self.players[winner].name)
+                msg += f'Roem! {self.glory_previous_round!s} punten\n'
+            msg += f'{self.players[winner].name} heeft gewonnen\n \n'
         else:
-            msg = ""
-        msg += "Ronde {!s}\n".format(self.round)
+            msg = ''
+        msg += f'Ronde {self.round!s}\n'
 
         count = len(self.cards_this_round)
         index_to_card = {}
         for c in self.cards_this_round:
             index_to_card[c.owner] = c.pretty()
         if count != 4:
-            index_to_card[self.currentplayer] = "  ...  "
-        msg += "```\n{}\n".format(self.p3.name.rjust(12))
+            index_to_card[self.currentplayer] = '  ...  '
+        msg += f'```\n{self.p3.name.rjust(12)}\n'
         if self.p3.index in index_to_card:
-            msg += index_to_card[self.p3.index].rjust(10) + "\n"
+            msg += index_to_card[self.p3.index].rjust(10) + '\n'
         else:
-            msg += "\n"
-        msg += self.p2.name.ljust(12) + self.p4.name.rjust(8) + "    \n"
+            msg += '\n'
+        msg += self.p2.name.ljust(12) + self.p4.name.rjust(8) + '    \n'
         if self.p2.index in index_to_card:
             msg += index_to_card[self.p2.index].center(4).ljust(12)
         else:
-            msg += " " * 14
+            msg += ' ' * 14
         if self.p4.index in index_to_card:
             msg += index_to_card[self.p4.index].center(len(self.p4.name) - 1).rjust(4)
-        msg += "\n" + self.p1.name.rjust(12) + "\n"
+        msg += '\n' + self.p1.name.rjust(12) + '\n'
         if self.p1.index in index_to_card:
-            msg += index_to_card[self.p1.index].rjust(10) + "\n"
-        msg += "\n```"
+            msg += index_to_card[self.p1.index].rjust(10) + '\n'
+        msg += '\n```'
         if count == 4:
             msg += self.endroundtext
             if self.glory == -1:
-                msg += " "
+                msg += ' '
 
         if not self.status_messages:
-            self.status_messages = self.send_user_message(msg, parse_mode="Markdown")
+            self.status_messages = self.send_user_message(msg, parse_mode='Markdown')
             # for p in self.real_players:
             # sent = self.bot.telebot.sendMessage(p.user_id, msg, parse_mode="Markdown")
             # ident = telepot.message_identifier(sent)
             # self.status_messages.append(ident)
         else:
             for ident in self.status_messages:
-                self.edit_message_text(ident, msg, parse_mode="Markdown")
+                self.edit_message_text(ident, msg, parse_mode='Markdown')
                 # editor = telepot.helper.Editor(self.bot.telebot, ident)
                 # try:
                 #     editor.editMessageText(msg, parse_mode="Markdown")
@@ -271,10 +263,10 @@ class Klaverjas(BaseGame):
         self.process_round(progress_game=True)
 
     def message_accept_glory(self, player, glory_amount):
-        buttons = ["ja", "nee"]
+        buttons = ['ja', 'nee']
         self.send_keyboard_message(
             player.user_id,
-            "{!s} roem. Kloppen?".format(glory_amount),
+            f'{glory_amount!s} roem. Kloppen?',
             buttons,
             self._accept_glory,
         )
@@ -286,9 +278,7 @@ class Klaverjas(BaseGame):
         winner = h.owner
         points = card_points(cards, self.trump)
 
-        msg = "{} heeft gewonnen met een {}".format(
-            self.players[winner].name, h.pretty()
-        )
+        msg = f'{self.players[winner].name} heeft gewonnen met een {h.pretty()}'
         self.endroundtext = msg
 
         if self.glory == -1:
@@ -300,7 +290,7 @@ class Klaverjas(BaseGame):
                 self.message_accept_glory(self.players[winner], glory)
                 return
         if self.glory > 0:
-            msg += "\nRoem! {!s} punten\n".format(self.glory)
+            msg += f'\nRoem! {self.glory!s} punten\n'
 
         if self.players[winner].is_playing:
             self.points1 += points + self.glory
@@ -336,7 +326,7 @@ class Klaverjas(BaseGame):
                 self.pointsglory1 += 100
 
             msg = self.game_end_message()
-            self.send_user_message(msg, parse_mode="Markdown")
+            self.send_user_message(msg, parse_mode='Markdown')
             time.sleep(2.0)
             # for i in self.player_names: self.bot.telebot.sendMessage(i, msg, parse_mode="Markdown")
             self.game_ended()
@@ -351,8 +341,10 @@ class Klaverjas(BaseGame):
             self.progress_game()
 
     def _progress_game_thread(self):
-        """When the cards have been dealt and trump has been chosen, tries to progress the game
-        until it hits a point where user input is required."""
+        """
+        When the cards have been dealt and trump has been chosen, tries to progress the game
+        until it hits a point where user input is required.
+        """
         while self.round <= 8:
             if isinstance(self.players[self.currentplayer], RealPlayer):
                 self.update_status_message()
@@ -361,11 +353,7 @@ class Klaverjas(BaseGame):
 
             self.update_status_message()
             t = time.time()
-            self.cards_this_round.append(
-                self.players[self.currentplayer].play_card(
-                    self.round, self.cards_this_round.copy()
-                )
-            )
+            self.cards_this_round.append(self.players[self.currentplayer].play_card(self.round, self.cards_this_round.copy()))
             delta = time.time() - t
             if delta < 0.75:
                 time.sleep(0.75 - delta)
@@ -376,42 +364,40 @@ class Klaverjas(BaseGame):
                 return
 
     def progress_game(self):
-        """When the cards have been dealt and trump has been chosen, tries to progress the game
-        until it hits a point where user input is required."""
+        """
+        When the cards have been dealt and trump has been chosen, tries to progress the game
+        until it hits a point where user input is required.
+        """
         t = threading.Thread(target=self._progress_game_thread)
         t.start()
 
     def game_end_message(self):
-        msg = "Klaverjas potje met seed {}\n".format(self.seed)
-        msg += "Vergelijken? Helaas, Ingrid kan dit (nog) niet. Val Alex lastig als je dit graag wil.\n"
-        msg += "Round {}\n".format(len(self.round_lists))
+        msg = f'Klaverjas potje met seed {self.seed}\n'
+        msg += 'Vergelijken? Helaas, Ingrid kan dit (nog) niet. Val Alex lastig als je dit graag wil.\n'
+        msg += f'Round {len(self.round_lists)}\n'
         if self.p1.is_playing:
-            msg += "Team 1: *{}*, *{}*\n".format(self.p1.name, self.p3.name)
-            msg += "Team 2: {}, {}\n".format(self.p2.name, self.p4.name)
+            msg += f'Team 1: *{self.p1.name}*, *{self.p3.name}*\n'
+            msg += f'Team 2: {self.p2.name}, {self.p4.name}\n'
         else:
-            msg += "Team 1: *{}*, *{}*\n".format(self.p2.name, self.p4.name)
-            msg += "Team 2: {}, {}\n".format(self.p1.name, self.p3.name)
-        msg += "Troef is {}\n".format(suit_to_unicode[self.trump])
+            msg += f'Team 1: *{self.p2.name}*, *{self.p4.name}*\n'
+            msg += f'Team 2: {self.p1.name}, {self.p3.name}\n'
+        msg += f'Troef is {suit_to_unicode[self.trump]}\n'
         if self.pointsglory1:
-            msg += "{!s} (+ {!s} roem)".format(
-                self.points1 - self.pointsglory1, self.pointsglory1
-            )
+            msg += f'{self.points1 - self.pointsglory1!s} (+ {self.pointsglory1!s} roem)'
         else:
-            msg += "{!s}".format(self.points1)
-        msg += " vs "
+            msg += f'{self.points1!s}'
+        msg += ' vs '
         if self.pointsglory2:
-            msg += "{!s} (+ {!s} roem)".format(
-                self.points2 - self.pointsglory2, self.pointsglory2
-            )
+            msg += f'{self.points2 - self.pointsglory2!s} (+ {self.pointsglory2!s} roem)'
         else:
-            msg += "{!s}".format(self.points2)
+            msg += f'{self.points2!s}'
 
         if self.points1 == 0 or self.points2 == 0:
-            msg += ". Pit!\n\n"
+            msg += '. Pit!\n\n'
         elif self.points1 <= self.points2:
-            msg += ". Nat!\n\n"
+            msg += '. Nat!\n\n'
         else:
-            msg += "\n\n"
+            msg += '\n\n'
 
         for k, cards in enumerate(self.round_lists):
             # msg += "Ronde {!s}:\n".format(k+1)
@@ -420,63 +406,56 @@ class Klaverjas(BaseGame):
             cardsorted = Cards(sorted(cards, key=lambda c: self.players[c.owner].index))
             for p, c in [(self.players[c.owner], c) for c in cardsorted]:
                 if c.played_index == 0:
-                    msg += "{}".format(("*[" + p.name + "]*").center(11))
+                    msg += '{}'.format(('*[' + p.name + ']*').center(11))
                 else:
-                    msg += "{}".format(p.name.center(11))
-            msg += "\n"
+                    msg += f'{p.name.center(11)}'
+            msg += '\n'
             h = highest_card(cards, self.trump)
             for c in cardsorted:
                 if c == h:
-                    msg += "{}".format(("*[" + c.pretty() + "]*").center(10))
+                    msg += '{}'.format(('*[' + c.pretty() + ']*').center(10))
                 else:
-                    msg += "{}".format(c.pretty().center(10))
-            msg += "\n"
+                    msg += f'{c.pretty().center(10)}'
+            msg += '\n'
             # msg += "{} wint de slag met een {}".format(self.players[h.owner].name, h.pretty()) + "\n"
             if self.glory_lists[k]:
-                msg += "{!s} roem geklopt".format(self.glory_lists[k]) + "\n"
-            msg += "\n"
-        msg = "\n".join(s.strip() for s in msg.splitlines())
+                msg += f'{self.glory_lists[k]!s} roem geklopt' + '\n'
+            msg += '\n'
+        msg = '\n'.join(s.strip() for s in msg.splitlines())
         return msg
 
     def summarize(self):
-        msg = "{} ".format(suit_to_unicode[self.trump])
+        msg = f'{suit_to_unicode[self.trump]} '
         if self.pointsglory1:
-            msg += "({!s}) {!s} - ".format(self.pointsglory1, self.points1)
+            msg += f'({self.pointsglory1!s}) {self.points1!s} - '
         else:
-            msg += "{!s} - ".format(self.points1)
+            msg += f'{self.points1!s} - '
         if self.pointsglory2:
-            msg += "{!s} ({!s})".format(self.points2, self.pointsglory2)
+            msg += f'{self.points2!s} ({self.pointsglory2!s})'
         else:
-            msg += "{!s}".format(self.points2)
+            msg += f'{self.points2!s}'
         return msg
 
     def save_game_result(self):
-        self.bot.dataManager.add_klaverjas_result(
-            self.seed, self.game_id, json.dumps(self.game_result())
-        )
+        self.bot.dataManager.add_klaverjas_result(self.seed, self.game_id, json.dumps(self.game_result()))
 
     def game_result(self):
         return {
-            "players": [self.p1.name, self.p2.name, self.p3.name, self.p4.name],
-            "startingPlayer": self.round_lists[0][0].owner,
-            "trump": colornames[self.trump],
-            "scores": [self.points1, self.points2],
-            "glory": [self.pointsglory1, self.pointsglory2],
-            "rounds": [
-                [(valuenames[card.value], colornames[card.color]) for card in cards]
-                for cards in self.round_lists
-            ],
-            "roundWinners": [
-                highest_card(cards, self.trump).owner for cards in self.round_lists
-            ],
-            "roundGlory": self.glory_lists,
+            'players': [self.p1.name, self.p2.name, self.p3.name, self.p4.name],
+            'startingPlayer': self.round_lists[0][0].owner,
+            'trump': colornames[self.trump],
+            'scores': [self.points1, self.points2],
+            'glory': [self.pointsglory1, self.pointsglory2],
+            'rounds': [[(valuenames[card.value], colornames[card.color]) for card in cards] for cards in self.round_lists],
+            'roundWinners': [highest_card(cards, self.trump).owner for cards in self.round_lists],
+            'roundGlory': self.glory_lists,
         }
 
 
 class KlaverjasDispatcher(BaseDispatcher):
     game_type = KLAVERJASSEN_DISPATCH
-    welcome = "Klaverjassen! Wie doet er mee?"
-    buttons = ["join/unjoin", "start"]
+    welcome = 'Klaverjassen! Wie doet er mee?'
+    buttons = ['join/unjoin', 'start']
     maxplayers = 4
 
     def __init__(self, bot, game_id, msg):
@@ -487,32 +466,30 @@ class KlaverjasDispatcher(BaseDispatcher):
         self.save_game_state()
 
     def message_init(self):
-        txt = self.welcome + "\n*" + self.sender_name
-        self.ident = self.send_keyboard_message(
-            self.chat_id, txt, self.buttons, self.callback
-        )
+        txt = self.welcome + '\n*' + self.sender_name
+        self.ident = self.send_keyboard_message(self.chat_id, txt, self.buttons, self.callback)
 
     def callback(self, ident, button_id, s):
         sender, sendername = s
         if self.started:
-            return "Potje is al begonnen"
+            return 'Potje is al begonnen'
         if button_id == 0:  # join/unjoin
             if self.players.count((sender, sendername)):
                 self.players.remove((sender, sendername))
                 self.update_message()
-                return "Unjoined"
+                return 'Unjoined'
             else:
                 if len(self.players) == self.maxplayers:
-                    return "Het spel zit al vol"
+                    return 'Het spel zit al vol'
                 self.players.append((sender, sendername))
                 self.update_message()
-                return "Joined"
+                return 'Joined'
 
         elif button_id == 1:  # start game
             if not self.players:
-                return "Er moet wel iemand meedoen"
+                return 'Er moet wel iemand meedoen'
             if sender != self.sender_id:
-                return "Alleen {} kan dit potje beginnen".format(self.sender_name)
+                return f'Alleen {self.sender_name} kan dit potje beginnen'
             index = self.bot.dataManager.get_unique_game_id()
             self.started = True
             g = Klaverjas(self.bot, index, self.players, self.date, self.cmd)
@@ -521,34 +498,29 @@ class KlaverjasDispatcher(BaseDispatcher):
             self.game_index = index
             editor = telepot.helper.Editor(self.bot.telebot, self.ident)
             editor.editMessageReplyMarkup()
-            return "Spel gestart"
+            return 'Spel gestart'
 
     def update_message(self):
-        msg = self.welcome + "\n" + "\n".join("* " + n for i, n in self.players)
+        msg = self.welcome + '\n' + '\n'.join('* ' + n for i, n in self.players)
         editor = telepot.helper.Editor(self.bot.telebot, self.ident)
-        editor.editMessageText(
-            msg, reply_markup=self.get_keyboard(self.buttons, index=0)
-        )
+        editor.editMessageText(msg, reply_markup=self.get_keyboard(self.buttons, index=0))
         self.save_game_state()
 
     def game_end(self, g):
         msg = g.game_end_message()
         editor = telepot.helper.Editor(self.bot.telebot, self.ident)
-        editor.editMessageText(msg, parse_mode="Markdown")
+        editor.editMessageText(msg, parse_mode='Markdown')
 
 
 class KlaverjasChallenge(BaseDispatcher):
     game_type = KLAVERJASSEN_CHALLENGE
-    welcome = "Klaverjas Challenge. Deelnemers:"
-    buttons = ["start", "unveil", "unveil all"]
+    welcome = 'Klaverjas Challenge. Deelnemers:'
+    buttons = ['start', 'unveil', 'unveil all']
 
     def __init__(self, bot, game_id, msg, ngames=1):
         super().__init__(bot, game_id, msg)
-        self.players = OrderedDict({1: "Ingrid", self.sender_id: self.sender_name})
-        self.seeds = [
-            "".join(random.choice(string.ascii_lowercase) for _ in range(10))
-            for i in range(ngames)
-        ]
+        self.players = OrderedDict({1: 'Ingrid', self.sender_id: self.sender_name})
+        self.seeds = [''.join(random.choice(string.ascii_lowercase) for _ in range(10)) for i in range(ngames)]
         random.seed(self.seeds[0])
         self.ai_names = random.sample(klaverjas_names, 3)
         self.ngames = ngames
@@ -569,7 +541,7 @@ class KlaverjasChallenge(BaseDispatcher):
         if pid not in self.games_finished:
             self.games_finished[pid] = 0
             self.scores[pid] = (0, 0)
-            self.gamestrings[pid] = ""
+            self.gamestrings[pid] = ''
         n = self.games_finished[pid]
         if pid != 1:
             g = Klaverjas(
@@ -603,8 +575,8 @@ class KlaverjasChallenge(BaseDispatcher):
     def __getstate__(self):
         state = super().__getstate__()
         if self.games and not isinstance(list(self.games.keys())[0], int):
-            state["games"] = {pid: g.game_id for pid, g in self.games.items()}
-        state["loaded"] = False
+            state['games'] = {pid: g.game_id for pid, g in self.games.items()}
+        state['loaded'] = False
         return state
 
     def load(self):
@@ -623,38 +595,35 @@ class KlaverjasChallenge(BaseDispatcher):
         if button_id == 0:
             if sender in self.players:
                 if self.games[sender].is_active:
-                    return "Je bent al bezig met een potje"
-                return "Je hebt je kans gehad, sorry"
+                    return 'Je bent al bezig met een potje'
+                return 'Je hebt je kans gehad, sorry'
             self.start_game(sender, sendername)
             self.update_message()
-            return "Potje gestart"
+            return 'Potje gestart'
         elif button_id == 1:
             if self.unveiled:
-                return "Al unveiled"
+                return 'Al unveiled'
             if sender not in self.games:
-                return "Je mag alleen kijken als je een potje gedaan hebt"
+                return 'Je mag alleen kijken als je een potje gedaan hebt'
             if self.games[sender].is_active:
-                return "Maak eerst je potje af"
+                return 'Maak eerst je potje af'
             msg = self.generate_unveil_message()
             self.send_user_message(msg, sender)
-            return "Zie Ingrid"
+            return 'Zie Ingrid'
         elif button_id == 2:
             if self.unveiled:
-                return "Al unveiled"
+                return 'Al unveiled'
             if sender != self.sender_id:
-                return "Alleen {} mag dit doen".format(self.sender_name)
+                return f'Alleen {self.sender_name} mag dit doen'
             self.unveiled = True
-            self.buttons = ["start"]
+            self.buttons = ['start']
             self.update_message()
-            return "Unveiled"
+            return 'Unveiled'
 
     def player_stats(self, pid):
         name = self.players[pid]
         s1, s2 = self.scores[pid]
-        s = (
-            "*{}: {:+d} ({:d} vs {:d}) ".format(name, s1 - s2, s1, s2)
-            + self.gamestrings[pid]
-        )
+        s = f'*{name}: {s1 - s2:+d} ({s1:d} vs {s2:d}) ' + self.gamestrings[pid]
         return s
 
     def generate_unveil_message(self):
@@ -666,31 +635,26 @@ class KlaverjasChallenge(BaseDispatcher):
                     raise NotImplementedError
                 else:
                     lines.append(self.player_stats(sid))
-        msg = "\n".join(lines)
+        msg = '\n'.join(lines)
         if not msg:
-            return "Nog niemand is klaar met spelen"
+            return 'Nog niemand is klaar met spelen'
         return msg
 
     def update_message(self):
         # if not hasattr(self, "loaded") or not self.loaded: self.load()
-        msg = self.welcome + "\n"
+        msg = self.welcome + '\n'
         for sender_id, name in self.players.items():
             if self.games_finished[sender_id] != self.ngames:
-                msg += "*{}: Bezig met spelen\n".format(name)
-            else:
-                if self.unveiled:
-                    if self.ngames == 1:
-                        msg += "*{}: {}\n".format(
-                            name, self.games[sender_id].summarize()
-                        )
-                    else:
-                        msg += self.player_stats(sender_id) + "\n"
+                msg += f'*{name}: Bezig met spelen\n'
+            elif self.unveiled:
+                if self.ngames == 1:
+                    msg += f'*{name}: {self.games[sender_id].summarize()}\n'
                 else:
-                    msg += "{}: Klaar (score verborgen)\n".format(name)
+                    msg += self.player_stats(sender_id) + '\n'
+            else:
+                msg += f'{name}: Klaar (score verborgen)\n'
         editor = telepot.helper.Editor(self.bot.telebot, self.ident)
-        editor.editMessageText(
-            msg, reply_markup=self.get_keyboard(self.buttons, index=0)
-        )
+        editor.editMessageText(msg, reply_markup=self.get_keyboard(self.buttons, index=0))
         self.save_game_state()
 
     def game_end(self, g):
@@ -700,20 +664,20 @@ class KlaverjasChallenge(BaseDispatcher):
             pid = 1
         s1, s2 = self.scores[pid]
         p1, p2 = g.points1, g.points2
-        status = "-"
+        status = '-'
         if p2 == 0:
-            status = "P"
+            status = 'P'
         if p1 <= p2:
             p2 += p1
             p1 = 0
-            status = "N"
+            status = 'N'
         if self.games_finished[pid] % 2 == 0:
             self.scores[pid] = (s1 + p1, s2 + p2)
         else:
             self.scores[pid] = (s1 + p2, s2 + p1)
         self.games_finished[pid] += 1
         if self.games_finished[pid] % 4 == 0:
-            status += " "
+            status += ' '
         self.gamestrings[pid] += status
         if self.games_finished[pid] < self.ngames:
             self.start_game(pid, self.players[pid])
@@ -725,12 +689,8 @@ class KlaverjasChallenge(BaseDispatcher):
                     self.send_user_message(msg, pid)
 
     def message_init(self):
-        txt = "{}\n*Ingrid: Bezig met spelen\n*{}: Bezig met spelen".format(
-            self.welcome, self.sender_name
-        )
-        self.ident = self.send_keyboard_message(
-            self.chat_id, txt, self.buttons, self.callback
-        )
+        txt = f'{self.welcome}\n*Ingrid: Bezig met spelen\n*{self.sender_name}: Bezig met spelen'
+        self.ident = self.send_keyboard_message(self.chat_id, txt, self.buttons, self.callback)
 
 
 class RealPlayer(BasePlayer):
@@ -745,19 +705,9 @@ class RealPlayer(BasePlayer):
         self.game.send_user_message(msg, self.user_id)
 
     def hand_string(self):
-        s = ""
+        s = ''
         for color in range(4):
-            s += (
-                suit_to_unicode[color]
-                + " "
-                + ", ".join(
-                    [
-                        short_valuenames[v]
-                        for v in self.cards.filter_color(color).values()
-                    ]
-                )
-                + "\n"
-            )
+            s += suit_to_unicode[color] + ' ' + ', '.join([short_valuenames[v] for v in self.cards.filter_color(color).values()]) + '\n'
         return s.strip()
 
     def give_cards(self, cards):
@@ -765,7 +715,7 @@ class RealPlayer(BasePlayer):
         # self.send_message(self.hand_string())
 
     def send_hand_message(self):
-        msg = "Troef is " + suit_to_unicode[self.trump] + "\n" + self.hand_string()
+        msg = 'Troef is ' + suit_to_unicode[self.trump] + '\n' + self.hand_string()
         if not self.hand_message_id:
             sent = self.game.bot.telebot.sendMessage(self.user_id, msg)
             self.hand_message_id = telepot.message_identifier(sent)

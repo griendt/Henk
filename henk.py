@@ -20,10 +20,10 @@ from telepot.loop import MessageLoop
 
 import modules
 from managedata import ManageData
-from util import get_current_hour, probaccept, Message
+from util import Message, get_current_hour, probaccept
 
 
-class Henk(object):
+class Henk:
     MAX_MESSAGE_LENGTH = 4096  # as specified in https://limits.tginfo.me/en
 
     commands: list
@@ -60,13 +60,12 @@ class Henk(object):
 
     def add_slash_command(self, command, callback):
         if command in self.slashcommands:
-            raise Exception("Slashcommand %s is already implemented" % command)
+            raise Exception('Slashcommand %s is already implemented' % command)
         self.slashcommands[command] = callback
-        return
 
     def add_callback_query(self, ident, callback):
         if ident in self.callback_query_types:
-            raise Exception("Callback ident %s already used" % ident)
+            raise Exception('Callback ident %s already used' % ident)
         self.callback_query_types[ident] = callback
 
     def sendMessage(self, chat_id, s):
@@ -79,7 +78,7 @@ class Henk(object):
         return m
 
     def pick(self, options):
-        return random.sample(options, 1)[0].replace("!name", self.sendername)
+        return random.sample(options, 1)[0].replace('!name', self.sendername)
 
     def update_querycounts(self, amount):
         for q in self.querycounts:
@@ -91,7 +90,7 @@ class Henk(object):
         if i not in self.querycounts:
             self.querycounts[i] = 0
         if (
-            q.find("ingrid") != -1
+            q.find('ingrid') != -1
             or (self.active and probaccept(2 ** -(max([self.querycounts[i] - 3, 0]))))
             or probaccept(2 ** -(max([self.querycounts[i] - 1, 0])))
         ):
@@ -103,23 +102,23 @@ class Henk(object):
     def on_chat_message(self, message):
         msg = Message(message)
         if not msg.istext:
-            print("Chat:", msg.content_type, msg.chat_type, msg.chat_id)
+            print('Chat:', msg.content_type, msg.chat_type, msg.chat_id)
             self.active = False
             return
 
         self.dataManager.write_message(msg.object)
         self.sendername = msg.sendername
         try:
-            print("Chat:", msg.chat_type, msg.chat_id, msg.normalised)
+            print('Chat:', msg.chat_type, msg.chat_id, msg.normalised)
         except UnicodeDecodeError:
-            print("Chat:", msg.chat_type, msg.chat_id, msg.normalised.encode("utf-8"))
+            print('Chat:', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
 
         # slash commands first
-        if msg.raw.startswith("/"):
+        if msg.raw.startswith('/'):
             for k in self.slashcommands.keys():
                 cmd = msg.raw.split()[0]
                 if cmd[1:] == k:
-                    msg.command = msg.raw[len(k) + 2:].strip()
+                    msg.command = msg.raw[len(k) + 2 :].strip()
                     v = self.slashcommands[k](self, msg)
                     if v:
                         self.sendMessage(msg.chat_id, v)
@@ -129,30 +128,28 @@ class Henk(object):
         return
 
     def on_callback_query(self, msg):
-        query_id, from_id, data = telepot.glance(msg, flavor="callback_query")
-        print("Callback query:", query_id, from_id, data)
+        query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
+        print('Callback query:', query_id, from_id, data)
         for ident, callback in self.callback_query_types.items():
             if data.startswith(ident):
                 callback(self, msg)
                 return
-        print("Unkown callback query: %s" % data)
+        print('Unkown callback query: %s' % data)
 
     def on_inline_query(self, msg):
         def compute():
-            telepot.glance(msg, flavor="inline_query")
+            telepot.glance(msg, flavor='inline_query')
             return []
 
         answerer.answer(msg, compute)
 
     def on_chosen_inline_result(self, msg):
-        result_id, from_id, query_string = telepot.glance(
-            msg, flavor="chosen_inline_result"
-        )
-        print("Chosen Inline Result:", result_id, from_id, query_string)
+        result_id, from_id, query_string = telepot.glance(msg, flavor='chosen_inline_result')
+        print('Chosen Inline Result:', result_id, from_id, query_string)
 
 
-if __name__ == "__main__":
-    f = open("apikey.txt", "r")
+if __name__ == '__main__':
+    f = open('apikey.txt')
     TOKEN = f.read()  # token for Henk
     f.close()
 
@@ -170,13 +167,13 @@ if __name__ == "__main__":
         MessageLoop(
             telebot,
             {
-                "chat": henk.on_chat_message,
-                "callback_query": henk.on_callback_query,
-                "inline_query": henk.on_inline_query,
-                "chosen_inline_result": henk.on_chosen_inline_result,
+                'chat': henk.on_chat_message,
+                'callback_query': henk.on_callback_query,
+                'inline_query': henk.on_inline_query,
+                'chosen_inline_result': henk.on_chosen_inline_result,
             },
         ).run_as_thread()
-        print("Listening ...")
+        print('Listening ...')
 
         silent = False
 
@@ -196,11 +193,11 @@ if __name__ == "__main__":
                     break
                 time.sleep(1)
             except ConnectionResetError:
-                print("ConnectionResetError")
+                print('ConnectionResetError')
             except urllib3.exceptions.ProtocolError:
-                print("ProtocolError")
+                print('ProtocolError')
     except KeyboardInterrupt:
         pass
     finally:
         if henk and not henk.should_exit:
-            telebot.sendMessage(PPA, "Ik ga even slapen nu. doei doei")
+            telebot.sendMessage(PPA, 'Ik ga even slapen nu. doei doei')

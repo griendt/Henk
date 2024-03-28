@@ -8,24 +8,24 @@ ADMIN = 19620232  # John
 PPA = -218118195  # Henk's fun palace
 
 
-class Bot(object):
+class Bot:
     def sendMessage(self, chat_id, message):
         print(message)
 
     def getChatMember(self, chat_id, num):
-        return {"user": {"first_name": "iemand"}}
+        return {'user': {'first_name': 'iemand'}}
 
 
 def dummy_glance(msg):
-    return ("text", "group", ADMIN)
+    return ('text', 'group', ADMIN)
 
 
 def make_message(s):
     return {
-        "text": s,
-        "from": {"id": ADMIN, "first_name": "John"},
-        "date": int(time.time()),
-        "chat": {"id": PPA},
+        'text': s,
+        'from': {'id': ADMIN, 'first_name': 'John'},
+        'date': int(time.time()),
+        'chat': {'id': PPA},
     }
 
 
@@ -51,5 +51,5 @@ telebot = Bot()
 henkBot = henk.Henk(telebot, is_dummy=True)
 
 while True:
-    s = input(">>> ")
+    s = input('>>> ')
     henkBot.on_chat_message(make_message(s))

@@ -41,32 +41,32 @@ TEN = 6
 ACE = 7
 
 valuenames = {
-    SEVEN: "SEVEN",
-    EIGHT: "EIGHT",
-    NINE: "NINE",
-    TEN: "TEN",
-    JACK: "JACK",
-    QUEEN: "QUEEN",
-    KING: "KING",
-    ACE: "ACE",
+    SEVEN: 'SEVEN',
+    EIGHT: 'EIGHT',
+    NINE: 'NINE',
+    TEN: 'TEN',
+    JACK: 'JACK',
+    QUEEN: 'QUEEN',
+    KING: 'KING',
+    ACE: 'ACE',
 }
-colornames = {CLUBS: "CLUBS", SPADES: "SPADES", DIAMONDS: "DIAMONDS", HEARTS: "HEARTS"}
+colornames = {CLUBS: 'CLUBS', SPADES: 'SPADES', DIAMONDS: 'DIAMONDS', HEARTS: 'HEARTS'}
 suit_to_unicode = {
-    CLUBS: "\u2663",
-    SPADES: "\u2660",
-    DIAMONDS: "\u2666",
+    CLUBS: '\u2663',
+    SPADES: '\u2660',
+    DIAMONDS: '\u2666',
     # HEARTS: u"\u2665" #This one looks black on iOS
-    HEARTS: "\u2764",
+    HEARTS: '\u2764',
 }
 short_valuenames = {
-    SEVEN: "7",
-    EIGHT: "8",
-    NINE: "9",
-    TEN: "10",
-    JACK: "J",
-    QUEEN: "Q",
-    KING: "K",
-    ACE: "A",
+    SEVEN: '7',
+    EIGHT: '8',
+    NINE: '9',
+    TEN: '10',
+    JACK: 'J',
+    QUEEN: 'Q',
+    KING: 'K',
+    ACE: 'A',
 }
 
 point_value = {
@@ -97,7 +97,7 @@ trump_order = [SEVEN, EIGHT, QUEEN, KING, TEN, ACE, NINE, JACK]
 normal_order = [SEVEN, EIGHT, NINE, JACK, QUEEN, KING, TEN, ACE]
 
 
-class Card(object):
+class Card:
     def __init__(self, value, color):
         self.value = value
         self.color = color
@@ -106,7 +106,7 @@ class Card(object):
         self.is_trump = False
 
     def __str__(self):
-        return "Card({}, {})".format(valuenames[self.value], colornames[self.color])
+        return f'Card({valuenames[self.value]}, {colornames[self.color]})'
 
     def __repr__(self):
         return str(self)
@@ -191,13 +191,17 @@ class Cards(list):
         return Cards([a for a in self if a.value == value])
 
     def higher_then(self, c):
-        """Creates a new Cards object with only cards higher then the one given
-        and of the correct color"""
+        """
+        Creates a new Cards object with only cards higher then the one given
+        and of the correct color
+        """
         return Cards([a for a in self if a > c and a.color == c.color])
 
     def has(self, c):
-        """c is either a Card object or a number.
-        Returns wether we have that card or a card of that value (if it is a number)"""
+        """
+        c is either a Card object or a number.
+        Returns wether we have that card or a card of that value (if it is a number)
+        """
         if isinstance(c, Card):
             a = [b for b in self if b == c]
         else:
@@ -218,12 +222,10 @@ class Cards(list):
         return Cards([a for a in self if a.is_trump])
 
     def pretty(self):
-        s = ""
+        s = ''
         for color in range(4):
-            vals = ", ".join(
-                [short_valuenames[v] for v in self.filter_color(color).values()]
-            )
-            s += "{} {}\n".format(suit_to_unicode[color], vals)
+            vals = ', '.join([short_valuenames[v] for v in self.filter_color(color).values()])
+            s += f'{suit_to_unicode[color]} {vals}\n'
         return s.strip()
 
 
@@ -251,11 +253,7 @@ def glory_calculation(cards, trump):
                 glory += 20
             return glory
         # len(values) = 4
-        if (
-            (order[3] == order[0] + 3)
-            and (order[2] == order[0] + 2)
-            and (order[1] == order[0] + 1)
-        ):
+        if (order[3] == order[0] + 3) and (order[2] == order[0] + 2) and (order[1] == order[0] + 1):
             glory += 50
             return glory
         if (order[2] == order[0] + 2) and (order[1] == order[0] + 1):
