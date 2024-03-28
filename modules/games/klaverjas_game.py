@@ -1,14 +1,14 @@
 import json
 import random
 import string
-from collections import OrderedDict
 import threading
 import time
+from collections import OrderedDict
 
 import telepot
 
 from .base import BaseGame, BaseDispatcher
-from .cards import *
+from .cards import create_deck, Cards, suit_to_unicode, highest_card, glory_calculation, card_points, valuenames, colornames, short_valuenames
 from .klaverjas_ai import BasePlayer, AI
 
 KLAVERJASSEN = 100

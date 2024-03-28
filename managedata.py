@@ -85,7 +85,7 @@ class ManageData(object):
                     ]
                     or 0
             )
-        except:
+        except Exception:
             self.maxgameid = 0
 
         self.klaverjas_results = self.db["KlaverjasResults"]
@@ -98,7 +98,7 @@ class ManageData(object):
                 "SELECT text FROM Messages WHERE (time >= %d) ORDER BY time"
                 % int(time.time() - 90 * 24 * 3600)
             )
-        except:
+        except Exception:
             recentish_messages = []
 
         self.alltext = "\n".join(i["text"] for i in recentish_messages)
@@ -311,12 +311,11 @@ def comp_freq(word, blob1, blob2):
 
 
 def top_words(blob1, blob2):
-    l = [
+    return sorted([
         (w, blob1.word_counts[w] / (1 + blob2.word_counts[w]))
         for w in blob1.word_counts
         if blob1.word_counts[w] > 3 and is_word_relevant(w)
-    ]
-    return sorted(l, key=lambda x: x[1], reverse=True)
+    ], key=lambda x: x[1], reverse=True)
 
 
 translate_name = {

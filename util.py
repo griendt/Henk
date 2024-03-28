@@ -1,6 +1,7 @@
 import datetime
 import random
 import re
+from collections.abc import Sequence
 
 import telepot
 
@@ -29,21 +30,12 @@ def prepare_query(s):
     return r.strip()
 
 
-def startswith(s, l):
-    for i in l:
-        if s.startswith(i):
-            return i
-    return False
-
-
-def pick(l):  # picks random element from list
-    return random.sample(l, 1)[0]
+def pick(items: Sequence):  # picks random element from list
+    return random.sample(items, 1)[0]
 
 
 def probaccept(p):  # returns True with probability p, otherwise False
-    if random.random() < p:
-        return True
-    return False
+    return random.random() < p
 
 
 class Message(object):
@@ -64,7 +56,7 @@ class Message(object):
         try:
             self.sender = msg["from"]["id"]
             self.sendername = msg["from"]["first_name"]
-        except:
+        except KeyError:
             self.sender = 0
             self.sendername = ""
         self.date = msg["date"]
