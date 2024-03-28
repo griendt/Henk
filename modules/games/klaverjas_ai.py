@@ -1340,8 +1340,8 @@ class AI(BasePlayer):
 
         scores = {}
         best_score = -500
-        for c, l in options.items():
-            avg = sum(l) / len(l)
+        for c, scores_for_card in options.items():
+            avg = sum(scores_for_card) / len(scores_for_card)
             self.pp("Minmax: {} has average score of {:.2f}".format(c.pretty(), avg))
             if avg > best_score:
                 best_score = avg

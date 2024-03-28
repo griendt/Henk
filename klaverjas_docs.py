@@ -80,8 +80,8 @@ for g in games:
             playerscores[pid].append(g.scores[pid][0] - g.scores[pid][1] - avg)
 
 avgscores = {}
-for pid, l in playerscores.items():
-    avgscores[pid] = sum(l) / len(l)
+for pid, scores_for_pid in playerscores.items():
+    avgscores[pid] = sum(scores_for_pid) / len(scores_for_pid)
 
 
 ##    n = g.real_players[0].name

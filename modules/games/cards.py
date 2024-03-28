@@ -149,9 +149,9 @@ def create_deck():
 
 
 def random_cards(amount):
-    l = list(range(32))
-    random.shuffle(l)
-    return Cards([index_to_card(i) for i in l[:amount]])
+    indexes = list(range(32))
+    random.shuffle(indexes)
+    return Cards([index_to_card(i) for i in indexes[:amount]])
 
 
 def highest_card(cards, trump=None):
@@ -161,13 +161,13 @@ def highest_card(cards, trump=None):
 
     color = cards[0].color
 
-    l = []
+    sorted_cards = []
     cards = sorted(cards)
     for c in cards:
         if c.color == color or c.is_trump:
-            l.append(c)
+            sorted_cards.append(c)
 
-    return l[-1]
+    return sorted_cards[-1]
 
 
 class Cards(list):

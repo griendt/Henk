@@ -659,14 +659,14 @@ class KlaverjasChallenge(BaseDispatcher):
 
     def generate_unveil_message(self):
         # if not self.loaded: self.load()
-        l = []
+        lines = []
         for sid, name in self.players.items():
             if self.games_finished[sid] == self.ngames:
                 if self.ngames == 1:
-                    l.append("*{}: {}".format(name, self.games[pid].summarize()))
+                    raise NotImplementedError
                 else:
-                    l.append(self.player_stats(sid))
-        msg = "\n".join(l)
+                    lines.append(self.player_stats(sid))
+        msg = "\n".join(lines)
         if not msg:
             return "Nog niemand is klaar met spelen"
         return msg

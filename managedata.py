@@ -362,16 +362,16 @@ def cleanup_msg(text):
 def linesplit(line, sep):
     # linesplit("Even testen of dit werkt\nWerkt het??\n Misschien wel", ["\n","?"])
     # = ['Even testen of dit werkt', 'Werkt het?', 'Misschien wel']
-    l = [line]
+    items = [line]
     for s in sep:
         l2 = []
-        for i in l:
+        for i in items:
             splits = i.split(s)
             for i in range(len(splits) - 1):
                 splits[i] += s
             l2.extend(j.strip() for j in splits if len(j.strip()) > 1)
-        l = l2
-    return l
+        items = l2
+    return items
 
 
 def prepare_pownies_text(m):
@@ -379,8 +379,8 @@ def prepare_pownies_text(m):
     print(len(msgs), "amount of messages")
     texts = []
     for t in list(filter(lambda x: x != "", [cleanup_msg(msg) for msg in msgs])):
-        l = linesplit(t, ["\n", "? ", ". ", "! "])
-        texts.extend(l)
+        lines = linesplit(t, ["\n", "? ", ". ", "! "])
+        texts.extend(lines)
 
     print("Split into", len(texts), "amount of lines")
     b = [
