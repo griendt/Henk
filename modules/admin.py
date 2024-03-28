@@ -5,7 +5,7 @@ from .base import Module
 
 
 class Admin(Module):
-    def register_commands(self, bot):
+    def register_commands(self, bot: Henk) -> None:
         bot.add_slash_command('help', self.help)
         bot.add_slash_command('ping', self.ping)
 

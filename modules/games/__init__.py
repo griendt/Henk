@@ -2,18 +2,18 @@ import pickle
 
 import telepot
 
-from ..base import Module
+from henk import Henk
+from modules.base import Module
+from util import Message, RawTelegramMessage
 from .klaverjas_game import (
     Klaverjas,
     KlaverjasChallenge,
     KlaverjasDispatcher,
 )
 
-# game_identifier = {KLAVERJASSEN: "k"}
-
 
 class Games(Module):
-    def initialise(self, bot):
+    def initialise(self, bot: Henk) -> None:
         bot.games = {}
         games = bot.dataManager.get_active_games()
         for g in games:
@@ -21,7 +21,7 @@ class Games(Module):
             game.setstate(bot)
             bot.games[g['game_id']] = game
 
-    def register_commands(self, bot):
+    def register_commands(self, bot: Henk) -> None:
         bot.add_slash_command('klaverjassen', self.klaverjassen)
         bot.add_slash_command('klaverchallenge', self.klaverchallenge)
         bot.add_slash_command('klaverchallenge4', self.klaverchallenge4)
@@ -30,7 +30,7 @@ class Games(Module):
         bot.add_slash_command('klaverchallenge16', self.klaverchallenge16)
         bot.add_callback_query('games', self.callback)
 
-    def klaverjassen(self, bot, msg):
+    def klaverjassen(self, bot: Henk, msg: Message) -> None:
         ident = bot.dataManager.get_unique_game_id()
         if msg.chat_type == 'private':
             g = Klaverjas(
@@ -69,7 +69,7 @@ class Games(Module):
         g = KlaverjasChallenge(bot, ident, msg, ngames=16)
         bot.games[ident] = g
 
-    def callback(self, bot, msg):
+    def callback(self, bot: Henk, msg: RawTelegramMessage):
         query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
         game_id, callback_id, button_id = (int(s) for s in data[5:].split(':'))
         g = bot.games[game_id]
