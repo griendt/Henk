@@ -20,7 +20,7 @@ from telepot.loop import MessageLoop
 
 import modules
 from managedata import ManageData
-from util import Message, get_current_hour, probaccept
+from util import Message
 
 
 class Henk:
@@ -69,10 +69,8 @@ class Henk:
     def sendMessage(self, chat_id, s):
         with self.message_lock:
             m = self.telebot.sendMessage(chat_id, s)
-        if probaccept(0.7):
-            self.active = True
-        else:
-            self.active = False
+
+        self.active = False
         return m
 
     def pick(self, options):
@@ -80,7 +78,7 @@ class Henk:
 
     def on_chat_message(self, message):
         msg = Message(message)
-        if not msg.istext:
+        if not msg.is_text:
             print('Chat:', msg.content_type, msg.chat_type, msg.chat_id)
             self.active = False
             return
@@ -115,7 +113,7 @@ class Henk:
                 return
         print('Unkown callback query: %s' % data)
 
-    def on_inline_query(self, msg):
+    def on_inline_query(self, msg) -> None:
         def compute():
             telepot.glance(msg, flavor='inline_query')
             return []
@@ -132,9 +130,7 @@ if __name__ == '__main__':
     TOKEN = f.read()  # token for Henk
     f.close()
 
-    # PPA = -6722364 #hardcoded label for party pownies
     PPA = -218118195  # Henk's fun palace
-
     ADMIN = 19620232  # John
 
     telebot = telepot.Bot(TOKEN)
@@ -154,17 +150,6 @@ if __name__ == '__main__':
         ).run_as_thread()
         print('Listening ...')
 
-        silent = False
-
-        h = get_current_hour()
-        # if not silent:
-        #    if h>6 and h<13:
-        #        telebot.sendMessage(PPA,"Goedemorgen")
-        #    elif h>12 and h<19:
-        #        telebot.sendMessage(PPA,"Goedemiddag")
-        #    else:
-        #       telebot.sendMessage(PPA,"Goedeavond")
-
         # Keep the program running.
         while True:
             try:
@@ -177,6 +162,3 @@ if __name__ == '__main__':
                 print('ProtocolError')
     except KeyboardInterrupt:
         pass
-    finally:
-        if henk and not henk.should_exit:
-            telebot.sendMessage(PPA, 'Ik ga even slapen nu. doei doei')

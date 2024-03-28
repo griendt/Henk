@@ -1,14 +1,11 @@
-import datetime
 import random
 import re
 from collections.abc import Sequence
+from typing import Literal, TypedDict, TypeVar
 
 import telepot
 
-
-def get_current_hour():
-    return datetime.datetime.time(datetime.datetime.now()).hour
-
+T = TypeVar('T')
 
 remove_emoji = re.compile(
     '[' '\U0001f300-\U0001f64f' '\U0001f680-\U0001f6ff' '\u2600-\u26ff\u2700-\u27bf]+',
@@ -16,36 +13,65 @@ remove_emoji = re.compile(
 )
 
 
-def normalise(s):  # " Hoi   bla" -> "hoi bla"
-    r = s.lower().strip()
-    r = remove_emoji.sub('', r)
-    r = ' '.join(r.split())
-    return r
+def normalise(string: str) -> str:  # " Hoi   bla" -> "hoi bla"
+    new_string = string.lower().strip()
+    new_string = remove_emoji.sub('', new_string)
+    return ' '.join(new_string.split())
 
 
-def prepare_query(s):
-    r = s.lower().strip().replace(', ', ' ').replace('?', '').replace('!', '')
+def prepare_query(query: str) -> str:
+    r = query.lower().strip().replace(', ', ' ').replace('?', '').replace('!', '')
     if r.endswith('.'):
         r = r[:-1]
     return r.strip()
 
 
-def pick(items: Sequence):  # picks random element from list
+def pick(items: Sequence[T]) -> T:  # picks random element from list
     return random.sample(items, 1)[0]
 
 
-def probaccept(p):  # returns True with probability p, otherwise False
-    return random.random() < p
+class TelegramUser(TypedDict):
+    first_name: str
+    id: int
+    is_bot: bool
+    language_code: str
+    username: str
+
+
+class TelegramChat(TypedDict, total=False):
+    id: int
+    type: Literal['private', 'group', 'channel']
+
+
+RawTelegramMessage = TypedDict('RawTelegramMessage', {
+    'message_id': int,
+    'from': TelegramUser,
+    'chat': TelegramChat,
+    'date': int,
+    'text': Literal['1', ''],
+}, total=False)
 
 
 class Message:
-    def __init__(self, msg):
+    content_type: str
+    is_text: bool
+    chat_id: int
+    chat_type: str
+    raw: Literal['1', '']
+    normalised: str
+    command: str
+    sender: int
+    sendername: str
+    date: int
+    object: RawTelegramMessage
+
+    def __init__(self, msg: RawTelegramMessage) -> None:
         content_type, chat_type, chat_id = telepot.glance(msg)
         self.content_type = content_type
-        self.istext = content_type == 'text'
+        self.is_text = content_type == 'text'
         self.chat_id = chat_id
         self.chat_type = chat_type
-        if self.istext:
+        if self.is_text:
             self.raw = msg['text']
             self.normalised = normalise(msg['text'])
             self.command = self.normalised
