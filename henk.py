@@ -39,8 +39,6 @@ class Henk:
         self.should_exit = False
         self.message_lock = threading.Lock()
 
-        self.querycounts = {}  # counts how many times I've said a thing lately
-        self.lastupdate = 0  # how long it has been since I've updated querycounts
         self.active = False  # whether someone has just talked to me
 
         self.morning_message_timer = 0  # how long ago we have said a morning message
@@ -79,25 +77,6 @@ class Henk:
 
     def pick(self, options):
         return random.sample(options, 1)[0].replace('!name', self.sendername)
-
-    def update_querycounts(self, amount):
-        for q in self.querycounts:
-            self.querycounts[q] = max([0, self.querycounts[q] - amount])
-
-    def react_to_query(self, q):
-        """Determine whether we will react to this specific query based on if we did so previously, to prevent spam"""
-        i = self.aliasdict[q]
-        if i not in self.querycounts:
-            self.querycounts[i] = 0
-        if (
-            q.find('ingrid') != -1
-            or (self.active and probaccept(2 ** -(max([self.querycounts[i] - 3, 0]))))
-            or probaccept(2 ** -(max([self.querycounts[i] - 1, 0])))
-        ):
-            self.querycounts[i] += 1
-            self.active = True
-            return True
-        return False
 
     def on_chat_message(self, message):
         msg = Message(message)
