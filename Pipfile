@@ -4,17 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-telepot = "*"
-textblob = "*"
-dataset = "*"
-unidecode = "*"
-requests = "*"
-mypy = "*"
-simpleeval = "*"
-google-api-python-client = "*"
+telepot = "==12.7"
+textblob = "==0.18.0.post0"
+dataset = ">=1.6"
+unidecode = ">=1.3"
+requests = ">=2.31"
+simpleeval = "==0.9.13"
+google-api-python-client = ">=2.123.0"
 
 [dev-packages]
 ruff = "*"
+mypy = "*"
 
 [requires]
-python_version = "3.6"
+python_version = "3.12"
