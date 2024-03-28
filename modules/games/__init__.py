@@ -1,16 +1,14 @@
 import pickle
-import time
 
 import telepot
-
-from ..base import Module
 
 from .klaverjas_game import (
     Klaverjas,
     KlaverjasDispatcher,
     KlaverjasChallenge,
-    KLAVERJASSEN,
 )
+from ..base import Module
+
 
 # game_identifier = {KLAVERJASSEN: "k"}
 
@@ -31,7 +29,6 @@ class Games(Module):
         bot.add_slash_command("klaverchallenge8", self.klaverchallenge8)
         bot.add_slash_command("klaverchallenge12", self.klaverchallenge8)
         bot.add_slash_command("klaverchallenge16", self.klaverchallenge16)
-        # bot.add_callback_query("gamestart", self.callbackstart)
         bot.add_callback_query("games", self.callback)
 
     def klaverjassen(self, bot, msg):

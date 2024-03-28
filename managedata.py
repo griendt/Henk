@@ -5,6 +5,7 @@ import time
 
 import dataset
 from textblob import TextBlob
+from unidecode import unidecode
 
 PPA = -6722364  # hardcoded label for party pownies
 PPA = -218118195  # Henk's fun palace
@@ -317,8 +318,6 @@ def top_words(blob1, blob2):
     ]
     return sorted(l, key=lambda x: x[1], reverse=True)
 
-
-from unidecode import unidecode
 
 translate_name = {
     "@john": "John",

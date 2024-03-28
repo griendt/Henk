@@ -25,17 +25,19 @@ from util import get_current_hour, probaccept, Message
 
 class Henk(object):
     MAX_MESSAGE_LENGTH = 4096  # as specified in https://limits.tginfo.me/en
+
     commands: list
     responses: list
     sendername: Any
+    slashcommands: OrderedDict
+    callback_query_types: OrderedDict
 
-    def __init__(self, telebot, isdummy=False):
-        self.telebot = telebot  # the bot interface for Telegram
+    def __init__(self, bot: telepot.Bot, is_dummy=False):
+        self.telebot = bot  # the bot interface for Telegram
         self.dataManager = ManageData()  # interface to the database
-        if isdummy:
-            self.dataManager.dummy = True
+        self.dataManager.dummy = is_dummy
         self.should_exit = False
-        self.messagelock = threading.Lock()
+        self.message_lock = threading.Lock()
 
         self.querycounts = {}  # counts how many times I've said a thing lately
         self.lastupdate = 0  # how long it has been since I've updated querycounts
@@ -43,15 +45,8 @@ class Henk(object):
 
         self.morning_message_timer = 0  # how long ago we have said a morning message
 
-        self.slashcommands = (
-            OrderedDict()
-        )  # command:callback where the callback takes two arguments, (self,msg)
-        self.commandcategories = (
-            OrderedDict()
-        )  # commandtype:callback where commandtype is a key in self.commands
-        self.callback_query_types = (
-            OrderedDict()
-        )  # ident:callback for special reply actions from Telegram
+        self.slashcommands = OrderedDict()  # command:callback where the callback takes two arguments, (self,msg)
+        self.callback_query_types = OrderedDict()  # ident:callback for special reply actions from Telegram
 
         self.commands = []
 
@@ -61,7 +56,6 @@ class Henk(object):
 
         # PPA = -6722364 #hardcoded label for party pownies
         self.homegroup = -218118195  # Henk's fun palace
-
         self.admin_ids = [58838022]  # Alex
 
     def add_slash_command(self, command, callback):
@@ -70,20 +64,13 @@ class Henk(object):
         self.slashcommands[command] = callback
         return
 
-    def add_command_category(self, command, callback):
-        if command in self.commandcategories:
-            raise Exception("Command Category %s is already implemented" % command)
-        if command not in self.commands:
-            raise Exception("Unknown command category %s" % command)
-        self.commandcategories[command] = callback
-
     def add_callback_query(self, ident, callback):
         if ident in self.callback_query_types:
             raise Exception("Callback ident %s already used" % ident)
         self.callback_query_types[ident] = callback
 
     def sendMessage(self, chat_id, s):
-        with self.messagelock:
+        with self.message_lock:
             m = self.telebot.sendMessage(chat_id, s)
         if probaccept(0.7):
             self.active = True
@@ -152,11 +139,8 @@ class Henk(object):
 
     def on_inline_query(self, msg):
         def compute():
-            query_id, from_id, query_string = telepot.glance(msg, flavor="inline_query")
-            result = []
-            s = query_string.lower().strip()
-
-            return result
+            telepot.glance(msg, flavor="inline_query")
+            return []
 
         answerer.answer(msg, compute)
 

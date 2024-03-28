@@ -1,6 +1,10 @@
+import pickle
+import time
+
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
+from managedata import ManageData
 
 # use creds to create a client to interact with the Google Drive API
 scope = ["https://spreadsheets.google.com/feeds"]
@@ -18,10 +22,6 @@ sheet = spread.get_worksheet(5)
 # list_of_hashes = sheet.get_all_records()
 # print(list_of_hashes)
 
-
-import pickle
-import time
-from managedata import ManageData
 
 KLAVERJASSEN = 100
 KLAVERJASSEN_DISPATCH = 101

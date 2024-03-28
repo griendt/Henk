@@ -17,7 +17,7 @@ class BaseGame(object):
         self.loaded = False
         self.callbacks = []
         self.final_callback = None
-        self._lock = bot.messagelock
+        self._lock = bot.message_lock
 
     def load(self):
         self.loaded = True
@@ -96,7 +96,7 @@ class BaseGame(object):
 
     def setstate(self, bot):
         self.bot = bot
-        self._lock = bot.messagelock
+        self._lock = bot.message_lock
 
     def save_game_state(self):
         with self._lock:

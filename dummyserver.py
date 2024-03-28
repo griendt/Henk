@@ -48,7 +48,7 @@ def alias_list():
 telepot.glance = dummy_glance
 
 telebot = Bot()
-henkBot = henk.Henk(telebot, isdummy=True)
+henkBot = henk.Henk(telebot, is_dummy=True)
 
 while True:
     s = input(">>> ")
