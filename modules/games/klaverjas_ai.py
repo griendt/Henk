@@ -1,7 +1,7 @@
 import itertools
 import random
 
-from cards import (
+from .cards import (
     ACE,
     EIGHT,
     JACK,
