@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: tail -f /dev/null #pipenv run python henk.py
+    command: pipenv run python henk.py
     restart: unless-stopped
     volumes:
       - ".:/code"

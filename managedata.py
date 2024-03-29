@@ -351,30 +351,3 @@ def linesplit(line, sep):
             l2.extend(j.strip() for j in splits if len(j.strip()) > 1)
         items = l2
     return items
-
-
-def prepare_pownies_text(m):
-    msgs = [i['text'] for i in m.messages.find(chat_id=-6722364)]
-    print(len(msgs), 'amount of messages')
-    texts = []
-    for t in list(filter(lambda x: x != '', [cleanup_msg(msg) for msg in msgs])):
-        lines = linesplit(t, ['\n', '? ', '. ', '! '])
-        texts.extend(lines)
-
-    print('Split into', len(texts), 'amount of lines')
-    b = [i for i in texts if any(i.find(name) != -1 for name in translate_name.values())]
-    print(len(b), 'contain names')
-    c = [i for i in texts if any(i.find(d) != -1 for d in '0123456789')]
-    print(len(c), 'contain a number')
-    return texts
-
-
-##
-##if __name__ == '__main__':
-##    m = ManageData()
-##    data = m.db['Messages'].all()
-##    totaltext = "\n".join(i['text'] for i in data)
-##    b1 = TextBlob(totaltext)
-##    data = m.latest_messages(PPA, 24)
-##    t = "\n".join(i['text'] for i in data)
-##    b2 =TextBlob(t)

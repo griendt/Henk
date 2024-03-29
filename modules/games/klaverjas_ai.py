@@ -1413,7 +1413,6 @@ class MinMaxer:
         while True:
             p = self.players[self.currentplayer]
             options = p.legal_cards(self.played_cards)
-            # print(self.round, self.currentplayer, options, [len(p.cards) for p in self.players])
             if len(options) == 1:
                 self.progress_game(options[0])
             else:
@@ -1426,8 +1425,6 @@ class MinMaxer:
         p1, p2 = 0, 0
         for c in options:
             m = self.copy()
-            # print("Going deeper")
-            # print(self.round, self.currentplayer, [len(p.cards) for p in m.players])
             m.progress_game(c)
             points1, points2 = m.do_minmax()
             if p.is_playing:

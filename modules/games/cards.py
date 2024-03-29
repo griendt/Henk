@@ -1,14 +1,15 @@
+import logging
 import random
+import warnings
 
-PRINT = True
 stoplevel = 0
 
 
-def pp(s, stoplvl=0):
-    if not PRINT:
-        return
+def pp(text: str, stoplvl=0) -> None:
+    warnings.warn('Use logging system instead of pp', DeprecationWarning)
+
     if stoplvl >= stoplevel:
-        print(s)
+        logging.info(text)
 
 
 def cmp(a, b):

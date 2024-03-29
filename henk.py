@@ -1,13 +1,4 @@
-#!/usr/bin/python3
-# coding=latin-1
-"""
-Henkbot 2017
-Should be run in at least Python 3.5 (3.4 maybe works as well)
-Dependencies: telepot, simpleeval, dataset, textblob, unidecode
-Install these with "pip install libname" and for textblob additionally call python -m textblob.download_corpora
-
-"""
-
+import logging
 import random
 import threading
 import time
@@ -15,16 +6,18 @@ from collections import OrderedDict
 from typing import Any
 
 import telepot
-import urllib3
 from telepot.loop import MessageLoop
 
 import modules
 from managedata import ManageData
-from util import Message
+from util import Message, RawTelegramMessage, setup_logging
 
 
 class Henk:
     MAX_MESSAGE_LENGTH = 4096  # as specified in https://limits.tginfo.me/en
+
+    telebot: telepot.Bot
+    answerer: telepot.helper.Answerer
 
     commands: list
     responses: list
@@ -32,11 +25,11 @@ class Henk:
     slashcommands: OrderedDict
     callback_query_types: OrderedDict
 
-    def __init__(self, bot: telepot.Bot, is_dummy=False):
+    def __init__(self, bot: telepot.Bot, *, is_dummy: bool = False) -> None:
         self.telebot = bot  # the bot interface for Telegram
+        self.answerer = telepot.helper.Answerer(self.telebot)
         self.dataManager = ManageData()  # interface to the database
         self.dataManager.dummy = is_dummy
-        self.should_exit = False
         self.message_lock = threading.Lock()
 
         self.active = False  # whether someone has just talked to me
@@ -79,16 +72,13 @@ class Henk:
     def on_chat_message(self, message):
         msg = Message(message)
         if not msg.is_text:
-            print('Chat:', msg.content_type, msg.chat_type, msg.chat_id)
+            logging.info('Chat: %s %s %d', msg.content_type, msg.chat_type, msg.chat_id)
             self.active = False
             return
 
         self.dataManager.write_message(msg.object)
         self.sendername = msg.sendername
-        try:
-            print('Chat:', msg.chat_type, msg.chat_id, msg.normalised)
-        except UnicodeDecodeError:
-            print('Chat:', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
+        logging.info('Chat: %s %d %s', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
 
         # slash commands first
         if msg.raw.startswith('/'):
@@ -104,25 +94,28 @@ class Henk:
         self.active = False
         return
 
-    def on_callback_query(self, msg):
-        query_id, from_id, data = telepot.glance(msg, flavor='callback_query')
-        print('Callback query:', query_id, from_id, data)
-        for ident, callback in self.callback_query_types.items():
-            if data.startswith(ident):
-                callback(self, msg)
-                return
-        print('Unkown callback query: %s' % data)
+    def on_callback_query(self, message: RawTelegramMessage) -> None:
+        query_id, from_id, data = telepot.glance(message, flavor='callback_query')
+        logging.debug('Callback query: %d %d %s', query_id, from_id, data)
 
-    def on_inline_query(self, msg) -> None:
-        def compute():
+        for identifier, callback in self.callback_query_types.items():
+            if data.startswith(identifier):
+                callback(self, message)
+                return
+
+        logging.error('Unknown callback query: %s', data)
+
+    def on_inline_query(self, msg: RawTelegramMessage) -> None:
+        def compute() -> list:
             telepot.glance(msg, flavor='inline_query')
             return []
 
-        answerer.answer(msg, compute)
+        self.answerer.answer(msg, compute)
 
-    def on_chosen_inline_result(self, msg):
+    @staticmethod
+    def on_chosen_inline_result(msg: RawTelegramMessage) -> None:
         result_id, from_id, query_string = telepot.glance(msg, flavor='chosen_inline_result')
-        print('Chosen Inline Result:', result_id, from_id, query_string)
+        logging.info('Chosen Inline Result: %d %d %s', result_id, from_id, query_string)
 
 
 def patch_telepot() -> None:
@@ -150,21 +143,18 @@ def patch_telepot() -> None:
     telepot.loop._extract_message = extract_message  # noqa: SLF001
 
 
-if __name__ == '__main__':
-    f = open('apikey.txt')
-    TOKEN = f.read()  # token for Henk
-    f.close()
+def run() -> None:
+    setup_logging()
+    logging.info('Booting...')
 
-    PPA = -218118195  # Henk's fun palace
-    ADMIN = 19620232  # John
+    patch_telepot()
 
-    telebot = telepot.Bot(TOKEN)
-    answerer = telepot.helper.Answerer(telebot)
-    henk = None
+    with open('apikey.txt') as file:
+        token = file.read()
 
+    telebot = telepot.Bot(token)
+    henk = Henk(telebot)
     try:
-        patch_telepot()
-        henk = Henk(telebot)
         MessageLoop(
             telebot,
             {
@@ -174,17 +164,17 @@ if __name__ == '__main__':
                 'chosen_inline_result': henk.on_chosen_inline_result,
             },
         ).run_as_thread()
-        print('Listening ...')
+        logging.info('Booted. Listening for messages...')
 
-        # Keep the program running.
         while True:
-            try:
-                if henk.should_exit:
-                    break
-                time.sleep(1)
-            except ConnectionResetError:
-                print('ConnectionResetError')
-            except urllib3.exceptions.ProtocolError:
-                print('ProtocolError')
+            time.sleep(1)
     except KeyboardInterrupt:
-        pass
+        logging.info('Shutting down by user interrupt...')
+    except Exception as e:
+        logging.critical('Henk shut down unexpectedly because of the following error: %s', e)
+
+    logging.info('Shut down.')
+
+
+if __name__ == '__main__':
+    run()

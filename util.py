@@ -1,6 +1,9 @@
+import logging
 import random
 import re
+import sys
 from collections.abc import Sequence
+from logging.config import dictConfig
 from typing import Literal, TypedDict, TypeVar
 
 import telepot
@@ -28,6 +31,39 @@ def prepare_query(query: str) -> str:
 
 def pick(items: Sequence[T]) -> T:  # picks random element from list
     return random.sample(items, 1)[0]
+
+
+def setup_logging() -> None:
+    dictConfig({
+        "version": 1,
+        "disable_existing_loggers": True,
+        "formatters": {
+            "default": {
+                "format": "%(asctime)s.%(msecs)03d %(levelname)s %(pathname)s:%(lineno)s %(message)s",
+                "datefmt": "%Y-%m-%d %H:%M:%S",
+            },
+        },
+        "handlers": {
+            "app_file": {
+                "class": logging.FileHandler,
+                "filename": "app.log",
+                "formatter": "default",
+                "mode": "a",
+            },
+            "stderr": {
+                "class": logging.StreamHandler,
+                "stream": sys.stderr,
+                "formatter": "default",
+            },
+        },
+        "loggers": {
+            "": {
+                "level": logging.DEBUG,
+                "handlers": ["app_file", "stderr"],
+                "propagate": False,
+            },
+        }
+    })
 
 
 class TelegramUser(TypedDict):
