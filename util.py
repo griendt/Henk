@@ -34,36 +34,38 @@ def pick(items: Sequence[T]) -> T:  # picks random element from list
 
 
 def setup_logging() -> None:
-    dictConfig({
-        "version": 1,
-        "disable_existing_loggers": True,
-        "formatters": {
-            "default": {
-                "format": "%(asctime)s.%(msecs)03d %(levelname)s %(pathname)s:%(lineno)s %(message)s",
-                "datefmt": "%Y-%m-%d %H:%M:%S",
+    dictConfig(
+        {
+            'version': 1,
+            'disable_existing_loggers': True,
+            'formatters': {
+                'default': {
+                    'format': '%(asctime)s.%(msecs)03d %(levelname)s %(pathname)s:%(lineno)s %(message)s',
+                    'datefmt': '%Y-%m-%d %H:%M:%S',
+                },
             },
-        },
-        "handlers": {
-            "app_file": {
-                "class": logging.FileHandler,
-                "filename": "app.log",
-                "formatter": "default",
-                "mode": "a",
+            'handlers': {
+                'app_file': {
+                    'class': logging.FileHandler,
+                    'filename': 'app.log',
+                    'formatter': 'default',
+                    'mode': 'a',
+                },
+                'stderr': {
+                    'class': logging.StreamHandler,
+                    'stream': sys.stderr,
+                    'formatter': 'default',
+                },
             },
-            "stderr": {
-                "class": logging.StreamHandler,
-                "stream": sys.stderr,
-                "formatter": "default",
-            },
-        },
-        "loggers": {
-            "": {
-                "level": logging.DEBUG,
-                "handlers": ["app_file", "stderr"],
-                "propagate": False,
+            'loggers': {
+                '': {
+                    'level': logging.DEBUG,
+                    'handlers': ['app_file', 'stderr'],
+                    'propagate': False,
+                },
             },
         }
-    })
+    )
 
 
 class TelegramUser(TypedDict):
@@ -79,13 +81,22 @@ class TelegramChat(TypedDict, total=False):
     type: Literal['private', 'group', 'channel']
 
 
-RawTelegramMessage = TypedDict('RawTelegramMessage', {
-    'message_id': int,
-    'from': TelegramUser,
-    'chat': TelegramChat,
-    'date': int,
-    'text': Literal['1', ''],
-}, total=False)
+RawTelegramMessage = TypedDict(
+    'RawTelegramMessage',
+    {
+        'message_id': int,
+        'from': TelegramUser,
+        'chat': TelegramChat,
+        'date': int,
+        'text': Literal['1', ''],
+    },
+    total=False,
+)
+
+
+class RawTelegramUpdate(TypedDict):
+    update_id: int
+    message: RawTelegramMessage
 
 
 class Message:
@@ -97,7 +108,7 @@ class Message:
     normalised: str
     command: str
     sender: int
-    sendername: str
+    sender_name: str
     date: int
     object: RawTelegramMessage
 
@@ -117,10 +128,10 @@ class Message:
             self.command = ''
         try:
             self.sender = msg['from']['id']
-            self.sendername = msg['from']['first_name']
+            self.sender_name = msg['from']['first_name']
         except KeyError:
             self.sender = 0
-            self.sendername = ''
+            self.sender_name = ''
         self.date = msg['date']
 
         self.object = msg

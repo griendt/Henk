@@ -108,7 +108,7 @@ class BaseDispatcher(BaseGame):
         super().__init__(bot, game_id, [], msg.date, msg.command)
         self.chat_id = msg.chat_id
         self.sender_id = msg.sender
-        self.sender_name = msg.sendername
+        self.sender_name = msg.sender_name
         self.message_init()
 
     def message_init(self):

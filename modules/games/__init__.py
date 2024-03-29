@@ -36,7 +36,7 @@ class Games(Module):
             g = Klaverjas(
                 bot,
                 ident,
-                [(msg.sender, msg.sendername)],
+                [(msg.sender, msg.sender_name)],
                 msg.date,
                 msg.command.strip(),
             )

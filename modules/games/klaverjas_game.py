@@ -470,18 +470,18 @@ class KlaverjasDispatcher(BaseDispatcher):
         self.ident = self.send_keyboard_message(self.chat_id, txt, self.buttons, self.callback)
 
     def callback(self, ident, button_id, s):
-        sender, sendername = s
+        sender, sender_name = s
         if self.started:
             return 'Potje is al begonnen'
         if button_id == 0:  # join/unjoin
-            if self.players.count((sender, sendername)):
-                self.players.remove((sender, sendername))
+            if self.players.count((sender, sender_name)):
+                self.players.remove((sender, sender_name))
                 self.update_message()
                 return 'Unjoined'
             else:
                 if len(self.players) == self.maxplayers:
                     return 'Het spel zit al vol'
-                self.players.append((sender, sendername))
+                self.players.append((sender, sender_name))
                 self.update_message()
                 return 'Joined'
 
@@ -591,13 +591,13 @@ class KlaverjasChallenge(BaseDispatcher):
 
     def callback(self, ident, button_id, s):
         # if not hasattr(self, "loaded") or not self.loaded: self.load()
-        sender, sendername = s
+        sender, sender_name = s
         if button_id == 0:
             if sender in self.players:
                 if self.games[sender].is_active:
                     return 'Je bent al bezig met een potje'
                 return 'Je hebt je kans gehad, sorry'
-            self.start_game(sender, sendername)
+            self.start_game(sender, sender_name)
             self.update_message()
             return 'Potje gestart'
         elif button_id == 1:

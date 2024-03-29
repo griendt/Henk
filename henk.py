@@ -10,7 +10,7 @@ from telepot.loop import MessageLoop
 
 import modules
 from managedata import ManageData
-from util import Message, RawTelegramMessage, setup_logging
+from util import Message, RawTelegramMessage, setup_logging, RawTelegramUpdate
 
 
 class Henk:
@@ -21,7 +21,7 @@ class Henk:
 
     commands: list
     responses: list
-    sendername: Any
+    sender_name: Any
     slashcommands: OrderedDict
     callback_query_types: OrderedDict
 
@@ -63,36 +63,36 @@ class Henk:
         with self.message_lock:
             m = self.telebot.sendMessage(chat_id, s)
 
-        self.active = False
         return m
 
     def pick(self, options):
-        return random.sample(options, 1)[0].replace('!name', self.sendername)
+        return random.sample(options, 1)[0].replace('!name', self.sender_name)
 
-    def on_chat_message(self, message):
-        msg = Message(message)
-        if not msg.is_text:
-            logging.info('Chat: %s %s %s', msg.content_type, msg.chat_type, msg.chat_id)
+    def on_chat_message(self, message: RawTelegramMessage) -> None:
+        parsed_message = Message(message)
+        if not parsed_message.is_text:
+            logging.info('Chat: %s %s %s', parsed_message.content_type, parsed_message.chat_type, parsed_message.chat_id)
             self.active = False
             return
 
-        self.dataManager.write_message(msg.object)
-        self.sendername = msg.sendername
-        logging.info('Chat: %s %s %s', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
+        self.dataManager.write_message(parsed_message.object)
+        self.sender_name = parsed_message.sender_name
+        logging.info('Chat: %s %s %s', parsed_message.chat_type, parsed_message.chat_id, parsed_message.normalised.encode('utf-8'))
 
-        # slash commands first
-        if msg.raw.startswith('/'):
-            for k in self.slashcommands.keys():
-                cmd = msg.raw.split()[0]
-                if cmd[1:] == k:
-                    msg.command = msg.raw[len(k) + 2:].strip()
-                    v = self.slashcommands[k](self, msg)
-                    if v:
-                        self.sendMessage(msg.chat_id, v)
-                    return
+        if not parsed_message.raw.startswith('/'):
+            logging.debug('Message does not start with /; skipping.')
+            return
 
-        self.active = False
-        return
+        # TODO: implement support for "/command@user" syntax
+        user_command = parsed_message.raw.split()[0][1:]
+
+        if user_command not in self.slashcommands:
+            logging.info('User requested command not recognized: %s', parsed_message.raw)
+            return
+
+        parsed_message.command = parsed_message.raw[len(user_command) + 2 :].strip()
+        if reply := self.slashcommands[user_command](self, parsed_message):
+            self.sendMessage(parsed_message.chat_id, reply)
 
     def on_callback_query(self, message: RawTelegramMessage) -> None:
         query_id, from_id, data = telepot.glance(message, flavor='callback_query')
@@ -105,16 +105,16 @@ class Henk:
 
         logging.error('Unknown callback query: %s', data)
 
-    def on_inline_query(self, msg: RawTelegramMessage) -> None:
+    def on_inline_query(self, message: RawTelegramMessage) -> None:
         def compute() -> list:
-            telepot.glance(msg, flavor='inline_query')
+            telepot.glance(message, flavor='inline_query')
             return []
 
-        self.answerer.answer(msg, compute)
+        self.answerer.answer(message, compute)
 
     @staticmethod
-    def on_chosen_inline_result(msg: RawTelegramMessage) -> None:
-        result_id, from_id, query_string = telepot.glance(msg, flavor='chosen_inline_result')
+    def on_chosen_inline_result(message: RawTelegramMessage) -> None:
+        result_id, from_id, query_string = telepot.glance(message, flavor='chosen_inline_result')
         logging.info('Chosen Inline Result: %s %s %s', result_id, from_id, query_string)
 
 
@@ -124,18 +124,20 @@ def patch_telepot() -> None:
     field as a valid message type, bots will break in groups chats.
     See also: https://stackoverflow.com/questions/66796130.
     """
-    telepot_message_types = ['message',
-                             'edited_message',
-                             'channel_post',
-                             'edited_channel_post',
-                             'callback_query',
-                             'inline_query',
-                             'chosen_inline_result',
-                             'shipping_query',
-                             'pre_checkout_query',
-                             'update_id']
+    telepot_message_types = [
+        'message',
+        'edited_message',
+        'channel_post',
+        'edited_channel_post',
+        'callback_query',
+        'inline_query',
+        'chosen_inline_result',
+        'shipping_query',
+        'pre_checkout_query',
+        'update_id',
+    ]
 
-    def extract_message(update) -> tuple[Any, Any]:  # noqa: ANN001
+    def extract_message(update: RawTelegramUpdate) -> tuple[Any, Any]:
         # noinspection PyProtectedMember
         key = telepot._find_first_key(update, telepot_message_types)  # noqa: SLF001
         return key, update[key]
