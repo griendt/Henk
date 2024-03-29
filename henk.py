@@ -95,7 +95,7 @@ class Henk:
             for k in self.slashcommands.keys():
                 cmd = msg.raw.split()[0]
                 if cmd[1:] == k:
-                    msg.command = msg.raw[len(k) + 2 :].strip()
+                    msg.command = msg.raw[len(k) + 2:].strip()
                     v = self.slashcommands[k](self, msg)
                     if v:
                         self.sendMessage(msg.chat_id, v)
@@ -125,6 +125,31 @@ class Henk:
         print('Chosen Inline Result:', result_id, from_id, query_string)
 
 
+def patch_telepot() -> None:
+    """
+    Patch telepot's loop._extract_message function. Without the 'update_id'
+    field as a valid message type, bots will break in groups chats.
+    See also: https://stackoverflow.com/questions/66796130.
+    """
+    telepot_message_types = ['message',
+                             'edited_message',
+                             'channel_post',
+                             'edited_channel_post',
+                             'callback_query',
+                             'inline_query',
+                             'chosen_inline_result',
+                             'shipping_query',
+                             'pre_checkout_query',
+                             'update_id']
+
+    def extract_message(update) -> tuple[Any, Any]:  # noqa: ANN001
+        # noinspection PyProtectedMember
+        key = telepot._find_first_key(update, telepot_message_types)  # noqa: SLF001
+        return key, update[key]
+
+    telepot.loop._extract_message = extract_message  # noqa: SLF001
+
+
 if __name__ == '__main__':
     f = open('apikey.txt')
     TOKEN = f.read()  # token for Henk
@@ -138,6 +163,7 @@ if __name__ == '__main__':
     henk = None
 
     try:
+        patch_telepot()
         henk = Henk(telebot)
         MessageLoop(
             telebot,
