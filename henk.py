@@ -72,13 +72,13 @@ class Henk:
     def on_chat_message(self, message):
         msg = Message(message)
         if not msg.is_text:
-            logging.info('Chat: %s %s %d', msg.content_type, msg.chat_type, msg.chat_id)
+            logging.info('Chat: %s %s %s', msg.content_type, msg.chat_type, msg.chat_id)
             self.active = False
             return
 
         self.dataManager.write_message(msg.object)
         self.sendername = msg.sendername
-        logging.info('Chat: %s %d %s', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
+        logging.info('Chat: %s %s %s', msg.chat_type, msg.chat_id, msg.normalised.encode('utf-8'))
 
         # slash commands first
         if msg.raw.startswith('/'):
@@ -96,7 +96,7 @@ class Henk:
 
     def on_callback_query(self, message: RawTelegramMessage) -> None:
         query_id, from_id, data = telepot.glance(message, flavor='callback_query')
-        logging.debug('Callback query: %d %d %s', query_id, from_id, data)
+        logging.debug('Callback query: %s %s %s', query_id, from_id, data)
 
         for identifier, callback in self.callback_query_types.items():
             if data.startswith(identifier):
@@ -115,7 +115,7 @@ class Henk:
     @staticmethod
     def on_chosen_inline_result(msg: RawTelegramMessage) -> None:
         result_id, from_id, query_string = telepot.glance(msg, flavor='chosen_inline_result')
-        logging.info('Chosen Inline Result: %d %d %s', result_id, from_id, query_string)
+        logging.info('Chosen Inline Result: %s %s %s', result_id, from_id, query_string)
 
 
 def patch_telepot() -> None:
