@@ -179,4 +179,10 @@ def run() -> None:
 
 
 if __name__ == '__main__':
-    run()
+    while True:
+        try:
+            run()
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            logging.exception('An error occurred that triggers a restart')
