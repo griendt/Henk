@@ -172,8 +172,8 @@ def run() -> None:
             time.sleep(1)
     except KeyboardInterrupt:
         logging.info('Shutting down by user interrupt...')
-    except Exception as e:
-        logging.critical('Henk shut down unexpectedly because of the following error: %s', e)
+    except Exception:
+        logging.exception('Henk shut down unexpectedly')
 
     logging.info('Shut down.')
 
